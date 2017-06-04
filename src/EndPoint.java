@@ -67,6 +67,6 @@ public class EndPoint {
 
 	//Print the attributes of the incident link
 	public String toString(){
-		return "Node type: "+t+", End point index: "+nodeId+" ,link Bandwidth = "+bw+"\n";
+		return "Node "+nodeId+" of type "+t+", BW = "+bw+"\n";
 	}
 }

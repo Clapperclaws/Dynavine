@@ -48,7 +48,7 @@ public class Graph {
 	public String toString(){
 		String content = "Adjacency List:\n";
 		for(int i=0;i<adjList.length;i++)
-			content += adjList.toString()+"\n";
+			content += "- Node "+i+" is attached to: \n"+adjList[i].toString()+"\n";
 		return content;
 	}
 	
