@@ -27,6 +27,14 @@ public class EndPoint {
 		this.cost = cost;
 	}
 	
+	//Copy Constructor
+	public EndPoint(EndPoint p){
+		this.nodeId = p.nodeId;
+		this.bw     = p.bw;
+		this.t      = p.t;
+		this.cost   = p.cost;
+	}
+	
 	//Return the index of the node at the other end of the link
 	public int getNodeId() {
 		return nodeId;

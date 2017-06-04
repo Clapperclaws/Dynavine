@@ -12,6 +12,18 @@ public class Graph {
 			adjList[i] = new ArrayList<EndPoint>();
 		}
 	}
+	
+	//Copy Constructor
+	public Graph(Graph g){
+		adjList = new ArrayList[g.adjList.length];
+		for(int i=0;i<g.adjList.length;i++){
+			adjList[i] = new ArrayList<EndPoint>();
+			for(int j=0;j<g.adjList[i].size();j++){
+				EndPoint p = new EndPoint(g.adjList[i].get(j));
+				adjList[i].add(p);
+			}
+		}
+	}
 
 	//Add a single end point to the list of end points for a given node.
 	public void addEndPoint(int nodeId, EndPoint endPnt){	
@@ -38,6 +50,17 @@ public class Graph {
 		}
 		return -1;
 	}
+	
+	//Get the Weight of an incident link
+		public int getCost(int source, int destination){
+			
+			ArrayList<EndPoint> endPoints = adjList[source];
+			for(int i=0;i<endPoints.size();i++){
+				if(endPoints.get(i).getNodeId() == destination)
+					return endPoints.get(i).getCost();
+			}
+			return -1;
+		}
 	
 	//Get the complete adjacency list
 	public ArrayList<EndPoint>[] getAdjList(){

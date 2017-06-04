@@ -3,20 +3,39 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class Driver {
 
 	public static void main(String [] args) throws IOException{
 		
-		//Initialize OTN Graph
+		//1-Initialize OTN Graph
 		Graph otn = ReadFromFile("./src/Dataset/OTN", EndPoint.type.otn);
 		System.out.println("******* OTN Graph ******* \n"+otn); // Print graph for testing
 	
-		//Initialize IP Graph
+		//2-Initialize IP Graph
 		Graph ip  = ReadFromFile("./src/Dataset/IP", EndPoint.type.ip);
 		System.out.println("******* IP Graph ******* \n"+ip); // Print graph for testing
 	
+		//3- Map IP to OTN
+		OverlayMapping ipOtn = new OverlayMapping(ip.getAdjList().length);
 		
+		//Assign each IP node index i to OTN node index i
+		for(int i=0;i<ipOtn.nodeMapping.length;i++){
+			ipOtn.nodeMapping[i] = i;
+		}
+		/****Missing Routing of IP Links
+		 * @author saraa: I am thinking of using Dijkstra; but I am wondering whether or not the 
+		 * tuples should be stored inside the graph?
+		 */
+		
+		//Print IP to OTN Overlay mapping
+		System.out.println("******* IP to OTN Overlay Mapping: ******* \n"+ipOtn);
+		
+		//4- Initialize VN Graph
+		Graph vn  = ReadFromFile("./src/Dataset/VN", EndPoint.type.virtual);
+		System.out.println("******* VN Graph ******* \n"+vn); // Print graph for testing
+	
 	}
 	
 	/*This function reads a graph from file*/
