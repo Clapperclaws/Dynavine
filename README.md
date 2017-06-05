@@ -25,8 +25,7 @@ virtual links.
 * Bandwidth = Available bandwidth on a link. In case of virtual link, this field
   represents bandwidth requirement.
 
-### IP Port Information (Example:
-[src/Dataset/ip-port](https://github.com/Clapperclaws/Dynavine/blob/master/src/Dataset/ip-port))
+### IP Port Information (Example: [src/Dataset/ip-port](https://github.com/Clapperclaws/Dynavine/blob/master/src/Dataset/ip-port))
 IP port information file contains as many lines as the number of IP nodes. Each
 line is a set of comma spearated values and has the following format:
 ```
@@ -36,8 +35,7 @@ The first value represents the 0-based node id of an IP node, the second number
 represents the number of ports available on the IP node, and the third number 
 represents the capacity of the ports on that IP node.
 
-### IP to OTN Node Mapping (Example:
-[src/Dataset/ip.nmap](https://github.com/Clapperclaws/Dynavine/blob/master/src/Dataset/otn.topo))
+### IP to OTN Node Mapping (Example: [src/Dataset/ip.nmap](https://github.com/Clapperclaws/Dynavine/blob/master/src/Dataset/otn.topo))
 This file contains as many lines as the number of IP nodes. Each line contains
 two values, separated by a comma. 
 ```
@@ -47,8 +45,7 @@ The first value represents the zero based node
 id of an IP node and the second value represents the zero based node id of an
 OTN node where the IP node is attached.
 
-### IP to OTN Link Mapping (Example:
-[src/Dataset/ip.emap](https://github.com/Clapperclaws/Dynavine/blob/master/src/Dataset/otn.topo))
+### IP to OTN Link Mapping (Example: [src/Dataset/ip.emap](https://github.com/Clapperclaws/Dynavine/blob/master/src/Dataset/otn.topo))
 Each line in this file is a set of comma separated values in the following
 format:
 ```
@@ -59,8 +56,7 @@ The second two value represents a tuple corresponding to an OTN link. If an IP
 link is mapped on an OTN path of length three then there will be three lines 
 that altogether describe the IP link to OTN link mapping.
 
-### Location Constraint File (Example:
-[src/Dataset/vnloc](https://github.com/Clapperclaws/Dynavine/blob/master/src/Dataset/otn.topo))
+### Location Constraint File (Example: [src/Dataset/vnloc](https://github.com/Clapperclaws/Dynavine/blob/master/src/Dataset/otn.topo))
 A location constraint file contains as many lines as the number of virtual
 nodes. Each line is a comma separated list of values. The first value indicates
 the id of a virtual node followed by the ids of IP nodes where this virtual node 
