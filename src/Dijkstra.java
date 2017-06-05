@@ -93,20 +93,24 @@ public class Dijkstra {
      * This method returns the path from the source to the selected target and
      * NULL if no path exists
      */
-    public LinkedList<Integer> getPath(int target) {
-        LinkedList<Integer> path = new LinkedList<Integer>();
+    public ArrayList<Tuple> getPath(int target) {
+        LinkedList<Integer> nodePath = new LinkedList<Integer>();
         int step = target;
         // check if a path exists
         if (predecessors.get(step) == null) {
             return null;
         }
-        path.add(step);
+        nodePath.add(step);
         while (predecessors.get(step) != null) {
             step = predecessors.get(step);
-            path.add(step);
+            nodePath.add(step);
         }
         // Put it into the correct order
-        Collections.reverse(path);
+        Collections.reverse(nodePath);
+        ArrayList<Tuple> path = new ArrayList<Tuple>();
+        for(int i=1;i<nodePath.size();i++){
+        	path.add(new Tuple(0,nodePath.get(i-1),nodePath.get(i)));
+        }
         return path;
     }
 	
