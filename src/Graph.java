@@ -52,19 +52,24 @@ public class Graph {
 	}
 	
 	//Get the Weight of an incident link
-		public int getCost(int source, int destination){
-			
-			ArrayList<EndPoint> endPoints = adjList[source];
-			for(int i=0;i<endPoints.size();i++){
-				if(endPoints.get(i).getNodeId() == destination)
-					return endPoints.get(i).getCost();
-			}
-			return -1;
+	public int getCost(int source, int destination){
+		
+		ArrayList<EndPoint> endPoints = adjList[source];
+		for(int i=0;i<endPoints.size();i++){
+			if(endPoints.get(i).getNodeId() == destination)
+				return endPoints.get(i).getCost();
 		}
+		return -1;
+	}
 	
 	//Get the complete adjacency list
 	public ArrayList<EndPoint>[] getAdjList(){
 		return adjList;
+	}
+	
+	// Returns the number of nodes in the graph.
+	public int nodeCount() {
+	    return adjList.length;
 	}
 	
 	//Print the complete Adjacency List
