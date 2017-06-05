@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 
 
@@ -16,100 +17,101 @@ import java.util.Set;
 public class Dijkstra {
 
 	private Graph g;
-    private Set<Integer> settledNodes;
-    private Set<Integer> unSettledNodes;
-    private Map<Integer, Integer> predecessors;
-    private Map<Integer, Integer> distance;
+	private boolean[] finished;
+	private int[] predecessors;
+	private int[] distance;
+    // private Map<Integer, Integer> distance;
 
     public Dijkstra(Graph graph) {
        g = new Graph(graph); // Create a copy of the graph
     }
     
+    protected class PQEntry implements Comparable<PQEntry> {
+        private int nodeId;
+        private int distanceFromSource;
+        
+        public PQEntry() {
+            nodeId = distanceFromSource = -1;
+        }
+        
+        public PQEntry(int nodeId, int distanceFromSource) {
+            this.nodeId = nodeId;
+            this.distanceFromSource = distanceFromSource;
+        }
+        
+        public void setNodeId(int nodeId) {
+            this.nodeId = nodeId;
+        }
+        
+        public int getNodeId() {
+            return this.nodeId;
+        }
+        
+        public void setDistanceFromSource(int distanceFromSource) {
+            this.distanceFromSource = distanceFromSource;
+        }
+        
+        public int getDistanceFromSource() {
+            return distanceFromSource;
+        }
+        
+        @Override
+        public int compareTo(PQEntry o) {
+            return distanceFromSource - o.distanceFromSource;
+        }
+    }
+    
     public void execute(int source) {
-        settledNodes = new HashSet<Integer>();
-        unSettledNodes = new HashSet<Integer>();
-        distance = new HashMap<Integer, Integer>();
-        predecessors = new HashMap<Integer, Integer>();
-        distance.put(source, 0);
-        unSettledNodes.add(source);
-        while (unSettledNodes.size() > 0) {
-            int node = getMinimum(unSettledNodes);
-            settledNodes.add(node);
-            unSettledNodes.remove(node);
-            findMinimalDistances(node);
+        int numNodes = g.nodeCount();
+        finished = new boolean[numNodes];
+        predecessors = new int[numNodes];
+        distance = new int[numNodes];
+        for (int i = 0; i < g.nodeCount(); ++i) {
+            distance[i] = Integer.MAX_VALUE;
+            predecessors[i] = -1;
+            finished[i] = false;
         }
-    }
-
-    
-    private void findMinimalDistances(int node) {
-        List<Integer> adjacentNodes = getNeighbors(node);
-        for (int target : adjacentNodes) {
-            if (getShortestDistance(target) > getShortestDistance(node) + g.getCost(node, target)) {
-                distance.put(target, getShortestDistance(node)+ g.getCost(node, target));
-                predecessors.put(target, node);
-                unSettledNodes.add(target);
-            }
-        }
-    }
-    
-    private List<Integer> getNeighbors(int node) {
-        List<Integer> neighbors = new ArrayList<Integer>();
-        for (int i=0;i<g.getAllEndPoints(node).size();i++) {
-            if (!isSettled(g.getAllEndPoints(node).get(i).getNodeId())) {
-                neighbors.add(g.getAllEndPoints(node).get(i).getNodeId());
-            }
-        }
-        return neighbors;
-    }
-
-    private int getMinimum(Set<Integer> vertexes) {
-        int minimum = Integer.MAX_VALUE;
-        for (int vertex : vertexes) {
-            if (minimum == Integer.MAX_VALUE) {
-                minimum = vertex;
-            } else {
-                if (getShortestDistance(vertex) < getShortestDistance(minimum)) {
-                    minimum = vertex;
+        distance[source] = 0;
+        PriorityQueue<PQEntry> pQueue = new PriorityQueue<PQEntry>();
+        pQueue.add(new PQEntry(source, 0));
+        while(!pQueue.isEmpty()) {
+            PQEntry entry = pQueue.poll();
+            int u = entry.getNodeId();
+            finished[u] = true;
+            for (int i = 0; i < g.getAdjList()[u].size(); ++i) {
+                EndPoint e = g.getAdjList()[u].get(i);
+                int v = e.getNodeId();
+                int linkCost = e.getCost();
+                if (finished[v]) continue;
+                if (distance[v] > distance[u] + linkCost) {
+                    distance[v] = distance[u] + linkCost;
+                    predecessors[v] = u;
+                    pQueue.add(new PQEntry(v, distance[v]));
                 }
             }
         }
-        return minimum;
     }
-
-    private boolean isSettled(int vertex) {
-        return settledNodes.contains(vertex);
-    }
-
-    private int getShortestDistance(int destination) {
-        Integer d = distance.get(destination);
-        if (d == null) {
-            return Integer.MAX_VALUE;
-        } else {
-            return d;
-        }
-    }
-
-    /*
-     * This method returns the path from the source to the selected target and
-     * NULL if no path exists
-     */
+ 
+    /* This method returns the path from the source to the selected target and
+    * NULL if no path exists
+    */
     public ArrayList<Tuple> getPath(int target) {
         LinkedList<Integer> nodePath = new LinkedList<Integer>();
         int step = target;
         // check if a path exists
-        if (predecessors.get(step) == null) {
+        if (predecessors[step] == -1) {
             return null;
         }
         nodePath.add(step);
-        while (predecessors.get(step) != null) {
-            step = predecessors.get(step);
+        while (predecessors[step] != -1) {
+            step = predecessors[step];
             nodePath.add(step);
         }
         // Put it into the correct order
         Collections.reverse(nodePath);
         ArrayList<Tuple> path = new ArrayList<Tuple>();
-        for(int i=1;i<nodePath.size();i++){
-        	path.add(new Tuple(0,nodePath.get(i-1),nodePath.get(i)));
+        for(int i = 1; i < nodePath.size(); i++){
+        	path.add(new Tuple(0, nodePath.get(i-1), nodePath.get(i)));
         }
         return path;
     }
