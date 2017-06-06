@@ -46,6 +46,10 @@ public class Driver {
 				System.out.print(locationConstraints[i].get(j)+",");
 			System.out.println();
 		}
+		
+		
+		//6- Get Initial Solution
+		 CreateInitialSolution cis = new CreateInitialSolution(ip, otn, ipOtn);
 	}
 	
 	public static String ReadFromFile(String filename) throws IOException{
