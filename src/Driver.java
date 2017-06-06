@@ -5,95 +5,142 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Scanner;
 
 public class Driver {
 
 	private static ArrayList<Tuple> ipLinks;  // List of IP Links
 	private static ArrayList<Tuple> otnLinks; // List of OTN Links
 	private static ArrayList<Tuple> vnLinks;  // List of VN Links
-	private static HashMap<Integer, ArrayList<Integer>> locationConstraints;
-	
-	
+
 	public static void main(String [] args) throws IOException{
 		
 		//1-Initialize OTN Graph
 		otnLinks = new ArrayList<Tuple>();
-		Graph otn = ReadFromFile("./src/Dataset/OTN", EndPoint.type.otn,otnLinks);
+		Graph otn = ReadTopology("./src/Dataset/otn.topo", EndPoint.type.otn,otnLinks);
 		System.out.println("******* OTN Graph ******* \n"+otn); // Print graph for testing
 	
 		//2-Initialize IP Graph & populate ipLinks
 		ipLinks = new ArrayList<Tuple>();
-		Graph ip  = ReadFromFile("./src/Dataset/IP", EndPoint.type.ip,ipLinks);
+		Graph ip  = ReadTopology("./src/Dataset/ip.topo", EndPoint.type.ip,ipLinks);
 		System.out.println("******* IP Graph ******* \n"+ip); // Print graph for testing
+		//Read IP Ports and Port Capacities
+		ReadPortAttributes("./src/Dataset/ip-port",ip);
+		for(int i=0;i<ip.getPorts().length;i++)
+			System.out.println("Node "+i+" has "+ip.getPorts()[i]+" ports each of capacity "+ip.getPortCapacity()[i]);
 		
 		//3- Map IP to OTN
-		OverlayMapping ipOtn = getInitialOtnIP(ip, otn);
-		
-		//Print IP to OTN Overlay mapping
+		OverlayMapping ipOtn = ReadOverlayMapping(ip.getAdjList().length, "./src/DataSet/ip.nmap", "./src/DataSet/ip.emap");
 		System.out.println("******* IP to OTN Overlay Mapping: ******* \n"+ipOtn);
 		
 		//4- Initialize VN Graph
 		vnLinks = new ArrayList<Tuple>();
-		Graph vn  = ReadFromFile("./src/Dataset/VN", EndPoint.type.virtual,vnLinks);
+		Graph vn  = ReadTopology("./src/Dataset/vn.topo", EndPoint.type.virtual,vnLinks);
 		System.out.println("******* VN Graph ******* \n"+vn); // Print graph for testing	
 		
 		//5- Initialize Location Constraints (Set all IP nodes as candidates for each VN node).
-		locationConstraints = new HashMap<Integer, ArrayList<Integer>>();
-		for(int i=0;i<vn.getAdjList().length;i++){
-			ArrayList<Integer> lc = new ArrayList<Integer>();
-			for (int j=0;j<ip.getAdjList().length;j++)
-				lc.add(j);
-			locationConstraints.put(i, lc);
+		ArrayList<Integer> locationConstraints[] = ReadLocationConstraints("./src/Dataset/vnloc", vn.getAdjList().length);
+		for(int i=0;i<locationConstraints.length;i++){
+			System.out.println("Location Constraints of node "+i);
+			for(int j=0;j<locationConstraints[i].size();j++)
+				System.out.print(locationConstraints[i].get(j)+",");
+			System.out.println();
 		}
 	}
 	
-	public static OverlayMapping getInitialOtnIP(Graph ip, Graph otn){
-		OverlayMapping ipOtn = new OverlayMapping(ip.getAdjList().length);
-		
-		//Assign each IP node index i to OTN node index i
-		for(int i=0;i<ipOtn.nodeMapping.length;i++){
-			ipOtn.nodeMapping[i] = i;
-		}
-		//Routing of IP Links over OTN links using Shortest Path
-		Dijkstra djAlgo = new Dijkstra(otn);
-		for(int i=0;i<ipLinks.size();i++){
-			int source = ipOtn.nodeMapping[ipLinks.get(i).getSource()];
-			int destination = ipOtn.nodeMapping[ipLinks.get(i).getDestination()];
-			djAlgo.execute(source);
-			ArrayList<Tuple> nodePath = djAlgo.getPath(destination);
-			ipOtn.linkMapping.put(ipLinks.get(i), nodePath);
-		}
-		return ipOtn;
-	}
-	
-	/*This function reads a graph from file*/
-	public static Graph ReadFromFile(String filename, EndPoint.type graphType, ArrayList<Tuple> links) throws IOException{
-		Graph g;
+	public static String ReadFromFile(String filename) throws IOException{
+		String content = "";
 		BufferedReader br = new BufferedReader(new FileReader(filename));
 	    try {
 	        StringBuilder sb = new StringBuilder();
 	        String line = br.readLine();
-	        g = new Graph(Integer.parseInt(line)); //Initialize Graph with the number of Nodes
-	        int counter = 0;
 	        while (line != null) {
-	            line = br.readLine();
-	            if(line != null){
-	            	//Split the line to get 0: index of the first node; 1: index of the second node; 2: bandwidth
-	            	String[] splitLine = line.split(",");
-	            	//Create Tuple for this link
-	            	links.add(new Tuple(0,Integer.parseInt(splitLine[0]),Integer.parseInt(splitLine[1])));
-	            	//Create two end points
-	            	EndPoint ep1 = new EndPoint(Integer.parseInt(splitLine[1]),Integer.parseInt(splitLine[2]),graphType,0);
-	            	g.addEndPoint(Integer.parseInt(splitLine[0]), ep1);
-	               	EndPoint ep2 = new EndPoint(Integer.parseInt(splitLine[0]),Integer.parseInt(splitLine[2]),graphType,0);
-	            	g.addEndPoint(Integer.parseInt(splitLine[1]), ep2);
-	 
-	            }
-	        }       
-	    } finally {
+	        	content += line+"\n";
+	        	line = br.readLine();
+	        }
+	    }finally {
 	    	if (br != null)
 	    		br.close();
 	    }
+	    return content;
+	}
+	
+	
+	/* This function reads the port info for the IP */
+	public static void ReadPortAttributes(String filename, Graph ip) throws IOException{
+		String content = ReadFromFile(filename);
+		Scanner scanner = new Scanner(content);
+		
+		while(scanner.hasNextLine()){
+			String[] line = scanner.nextLine().split(",");
+			ip.getPorts()[Integer.parseInt(line[0])] = Integer.parseInt(line[1]);
+			ip.getPortCapacity()[Integer.parseInt(line[0])] = Integer.parseInt(line[2]);
+		}
+	}
+	
+	/* This function reads the location constraints */
+	public static ArrayList<Integer>[]  ReadLocationConstraints(String fileName, int n) throws IOException{
+		ArrayList<Integer>[] loc = new ArrayList[n];
+		
+		String content = ReadFromFile(fileName);
+		Scanner scanner = new Scanner(content);
+		while(scanner.hasNextLine()){
+			String[] line = scanner.nextLine().split(",");
+			loc[Integer.parseInt(line[0])] = new ArrayList<Integer>();
+			for(int i=1;i<line.length;i++)
+				loc[Integer.parseInt(line[0])].add(Integer.parseInt(line[i]));
+		}	
+		return loc;
+	}
+	
+	/* This function reads the IP-OTN OverlayMapping Solution*/
+	public static OverlayMapping ReadOverlayMapping(int n, String nodeMappingFile, String linkMappingFile) throws IOException{
+		
+		//Create OverlayMapping Solution
+		OverlayMapping ipOtn = new OverlayMapping(n);
+		
+		//Read Node Mapping Solution
+		Scanner scanner = new Scanner(ReadFromFile(nodeMappingFile));
+		while(scanner.hasNextLine()){
+			String[] line = scanner.nextLine().split(",");
+			ipOtn.nodeMapping[Integer.parseInt(line[0])] = Integer.parseInt(line[1]);
+		}
+		
+		//Read Link Mapping Solution
+		scanner = new Scanner(ReadFromFile(linkMappingFile));
+		while(scanner.hasNextLine()){
+			String[] splitLine = scanner.nextLine().split(",");
+			Tuple ipLink = new Tuple(0,Integer.parseInt(splitLine[0]), Integer.parseInt(splitLine[1]));
+			
+			for(int i=0;i<ipLinks.size();i++){
+				if(ipLinks.get(i).equals(ipLink))
+					ipOtn.setLinkMapping(ipLinks.get(i),new Tuple(0,Integer.parseInt(splitLine[2]), Integer.parseInt(splitLine[3])));            
+			}	
+		}
+		return ipOtn;
+	}
+	
+	
+	/*This function reads a graph from file*/
+	public static Graph ReadTopology(String filename, EndPoint.type graphType, ArrayList<Tuple> links) throws IOException{
+	
+		Scanner scanner = new Scanner(ReadFromFile(filename));
+		Graph g= new Graph(Integer.parseInt(scanner.nextLine())); //Initialize Graph with the number of Nodes
+
+		while (scanner.hasNextLine()) {
+		  String line = scanner.nextLine();
+            if(line != null){
+            	//Split the line to get 0: index of the first node; 1: index of the second node; 2: bandwidth
+            	String[] splitLine = line.split(",");
+            	//Create Tuple for this link
+            	links.add(new Tuple(0,Integer.parseInt(splitLine[0]),Integer.parseInt(splitLine[1])));
+            	//Create two end points
+            	EndPoint ep1 = new EndPoint(Integer.parseInt(splitLine[1]),Integer.parseInt(splitLine[2]),Integer.parseInt(splitLine[3]),graphType);
+            	g.addEndPoint(Integer.parseInt(splitLine[0]), ep1);
+               	EndPoint ep2 = new EndPoint(Integer.parseInt(splitLine[0]),Integer.parseInt(splitLine[2]),Integer.parseInt(splitLine[3]),graphType);
+            	g.addEndPoint(Integer.parseInt(splitLine[1]), ep2);
+            }
+        }       
 	    return g;
 	}
 	

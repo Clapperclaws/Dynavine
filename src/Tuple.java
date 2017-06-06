@@ -55,4 +55,12 @@ public class Tuple{
 		return "("+source+","+destination+")";
 	}
 	
+	public boolean equals(Tuple t){
+		if((t.order == this.order) && (t.destination == this.destination) && (t.source == this.source))
+			return true;
+		if((t.order == this.order) && (t.destination == this.source) && (t.source == this.destination ))
+			return true;
+	
+		return false;
+	}
 }

@@ -5,12 +5,17 @@ public class Graph {
 	// Every node in the graph is associated with a list of endpoints
 	private ArrayList<EndPoint> adjList[];
 	
+	private int[] ports;
+	private int[] portCapacity;
+	
 	//Default constructor
 	public Graph(int N){	
 		adjList = new ArrayList[N];
 		for(int i=0;i<N;i++){
 			adjList[i] = new ArrayList<EndPoint>();
 		}
+		ports = new int[N];
+		portCapacity = new int[N];
 	}
 	
 	//Copy Constructor
@@ -72,6 +77,22 @@ public class Graph {
 	    return adjList.length;
 	}
 	
+	public int[] getPorts() {
+		return ports;
+	}
+
+	public void setPorts(int[] ports) {
+		this.ports = ports;
+	}
+
+	public int[] getPortCapacity() {
+		return portCapacity;
+	}
+
+	public void setPortCapacity(int[] portCapacity) {
+		this.portCapacity = portCapacity;
+	}
+
 	//Print the complete Adjacency List
 	public String toString(){
 		String content = "Adjacency List:\n";

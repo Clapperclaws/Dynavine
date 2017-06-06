@@ -20,7 +20,7 @@ public class EndPoint {
 	}
 	
 	//Initializing Constructor
-	public EndPoint(int nodeId, int bw, type t, int cost){
+	public EndPoint(int nodeId, int cost, int bw, type t){
 		this.nodeId = nodeId;
 		this.bw     = bw;
 		this.t   = t;
@@ -75,6 +75,6 @@ public class EndPoint {
 
 	//Print the attributes of the incident link
 	public String toString(){
-		return "Node "+nodeId+" of type "+t+", BW = "+bw+"\n";
+		return "Node "+nodeId+" of type "+t+", BW = "+bw+", and cost = "+cost+"\n";
 	}
 }

@@ -35,8 +35,14 @@ public class OverlayMapping {
 		return linkMapping.get(t);
 	}
 	
+	public void setLinkMapping(Tuple t, Tuple p){
+		if(!linkMapping.containsKey(t))
+			linkMapping.put(t,  new ArrayList<Tuple>());
+		linkMapping.get(t).add(p);			
+	}
+	
 	//Set link Mapping
-	public void setLinkMapping(Tuple t, ArrayList<Tuple> path){
+	public void setLinkMappingPath(Tuple t, ArrayList<Tuple> path){
 		if(!linkMapping.containsKey(t))
 			linkMapping.put(t,  new ArrayList<Tuple>());
 		linkMapping.get(t).addAll(path);			
