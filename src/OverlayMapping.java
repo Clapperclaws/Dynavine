@@ -35,6 +35,7 @@ public class OverlayMapping {
 		return linkMapping.get(t);
 	}
 	
+	
 	public void setLinkMapping(Tuple t, Tuple p){
 		if(!linkMapping.containsKey(t))
 			linkMapping.put(t,  new ArrayList<Tuple>());
@@ -46,6 +47,21 @@ public class OverlayMapping {
 		if(!linkMapping.containsKey(t))
 			linkMapping.put(t,  new ArrayList<Tuple>());
 		linkMapping.get(t).addAll(path);			
+	}
+	
+	//This Function Aggregates Node Placement
+	public void incrementNodeEmbed(OverlayMapping sol){
+		for(int i=0;i<sol.nodeMapping.length;i++)
+			this.nodeMapping[i] = sol.nodeMapping[i];
+	}
+
+	//This function returns true if a given IP node (indicated by nodeIndex) is occupied
+	public boolean isOccupied(int nodeIndex){
+		for(int i=0;i<this.nodeMapping.length;i++){
+			if(nodeMapping[i] == nodeIndex)
+				return true;
+		}
+		return false;
 	}
 	
 	//Print the content of the overlay mapping

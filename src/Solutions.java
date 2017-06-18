@@ -7,6 +7,12 @@ public class Solutions {
 	OverlayMapping ipOtn; //This 
 	OverlayMapping vnIp;	
 	ArrayList<Tuple> newIpLinks;
+	
+	public Solutions(int numVN, int numIP){
+		ipOtn = new OverlayMapping(numIP);
+		vnIp  = new OverlayMapping(numVN);
+		newIpLinks = new ArrayList<Tuple>();
+	}
 
 	public Solutions(OverlayMapping ipOtn, OverlayMapping vnIp, ArrayList<Tuple> newIpLinks){
 		this.ipOtn = ipOtn;
@@ -37,6 +43,14 @@ public class Solutions {
 	public void setNewIpLinks(ArrayList<Tuple> newIpLinks) {
 		this.newIpLinks = newIpLinks;
 	}
-
+	
+	public String toString(){
+		String content = "**** VN -> IP **** \n";
+		content += vnIp+"\n";
+		content +=  "**** IP -> OTN **** \n";
+		content += ipOtn+"\n";
+		return content;
+	}
+	
 }
 

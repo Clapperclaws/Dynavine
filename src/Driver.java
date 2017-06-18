@@ -30,7 +30,7 @@ public class Driver {
 			System.out.println("Node "+i+" has "+ip.getPorts()[i]+" ports each of capacity "+ip.getPortCapacity()[i]);
 		
 		//3- Map IP to OTN
-		OverlayMapping ipOtn = ReadOverlayMapping(ip.getAdjList().length, "./src/DataSet/ip.nmap", "./src/DataSet/ip.emap");
+		OverlayMapping ipOtn = ReadOverlayMapping(ip.getAdjList().size(), "./src/DataSet/ip.nmap", "./src/DataSet/ip.emap");
 		System.out.println("******* IP to OTN Overlay Mapping: ******* \n"+ipOtn);
 		
 		//4- Initialize VN Graph
@@ -39,17 +39,17 @@ public class Driver {
 		System.out.println("******* VN Graph ******* \n"+vn); // Print graph for testing	
 		
 		//5- Initialize Location Constraints (Set all IP nodes as candidates for each VN node).
-		ArrayList<Integer> locationConstraints[] = ReadLocationConstraints("./src/Dataset/vnloc", vn.getAdjList().length);
+		ArrayList<Integer> locationConstraints[] = ReadLocationConstraints("./src/Dataset/vnloc", vn.getAdjList().size());
 		for(int i=0;i<locationConstraints.length;i++){
 			System.out.println("Location Constraints of node "+i);
 			for(int j=0;j<locationConstraints[i].size();j++)
 				System.out.print(locationConstraints[i].get(j)+",");
 			System.out.println();
 		}
-		
-		
+			
 		//6- Get Initial Solution
 		 CreateInitialSolution cis = new CreateInitialSolution(ip, otn, ipOtn);
+		 cis.getInitialSolution(vn, locationConstraints,1);
 	}
 	
 	public static String ReadFromFile(String filename) throws IOException{
@@ -139,9 +139,9 @@ public class Driver {
             	//Create Tuple for this link
             	links.add(new Tuple(0,Integer.parseInt(splitLine[0]),Integer.parseInt(splitLine[1])));
             	//Create two end points
-            	EndPoint ep1 = new EndPoint(Integer.parseInt(splitLine[1]),Integer.parseInt(splitLine[2]),Integer.parseInt(splitLine[3]),graphType);
+            	EndPoint ep1 = new EndPoint(Integer.parseInt(splitLine[1]),Integer.parseInt(splitLine[2]),Integer.parseInt(splitLine[3]),graphType,0);
             	g.addEndPoint(Integer.parseInt(splitLine[0]), ep1);
-               	EndPoint ep2 = new EndPoint(Integer.parseInt(splitLine[0]),Integer.parseInt(splitLine[2]),Integer.parseInt(splitLine[3]),graphType);
+               	EndPoint ep2 = new EndPoint(Integer.parseInt(splitLine[0]),Integer.parseInt(splitLine[2]),Integer.parseInt(splitLine[3]),graphType,0);
             	g.addEndPoint(Integer.parseInt(splitLine[1]), ep2);
             }
         }       

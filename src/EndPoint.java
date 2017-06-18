@@ -10,6 +10,7 @@ public class EndPoint {
 	private int bw; //Bandwidth (demand/capacity) of the link
 	private type t; //Type of the node at the other end of the link
 	private int cost; // Cost/weight on the link
+	private int order;
 
 	//Default Constructor
 	public EndPoint(){
@@ -17,14 +18,16 @@ public class EndPoint {
 		bw = 0;
 		cost = 0;
 		t = type.none;	
+		order = 0;
 	}
 	
 	//Initializing Constructor
-	public EndPoint(int nodeId, int cost, int bw, type t){
+	public EndPoint(int nodeId, int cost, int bw, type t, int order){
 		this.nodeId = nodeId;
 		this.bw     = bw;
 		this.t   = t;
 		this.cost = cost;
+		this.order = order;
 	}
 	
 	//Copy Constructor
@@ -33,6 +36,7 @@ public class EndPoint {
 		this.bw     = p.bw;
 		this.t      = p.t;
 		this.cost   = p.cost;
+		this.order  = p.order;
 	}
 	
 	//Return the index of the node at the other end of the link
@@ -73,8 +77,16 @@ public class EndPoint {
 		this.cost = cost;
 	}
 
+	public int getOrder() {
+		return order;
+	}
+
+	public void setOrder(int order) {
+		this.order = order;
+	}
+
 	//Print the attributes of the incident link
 	public String toString(){
-		return "Node "+nodeId+" of type "+t+", BW = "+bw+", and cost = "+cost+"\n";
+		return "Node "+nodeId+" of type "+t+", BW = "+bw+", and cost = "+cost+", and order ="+order+"\n\n";
 	}
 }

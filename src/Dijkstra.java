@@ -62,11 +62,11 @@ public class Dijkstra {
     }
     
     public void execute(int source) {
-        int numNodes = g.nodeCount();
+        int numNodes = g.getNodeCount();
         finished = new boolean[numNodes];
         predecessors = new int[numNodes];
         distance = new int[numNodes];
-        for (int i = 0; i < g.nodeCount(); ++i) {
+        for (int i = 0; i < g.getNodeCount(); ++i) {
             distance[i] = Integer.MAX_VALUE;
             predecessors[i] = -1;
             finished[i] = false;
@@ -78,8 +78,8 @@ public class Dijkstra {
             PQEntry entry = pQueue.poll();
             int u = entry.getNodeId();
             finished[u] = true;
-            for (int i = 0; i < g.getAdjList()[u].size(); ++i) {
-                EndPoint e = g.getAdjList()[u].get(i);
+            for (int i = 0; i < g.getAdjList().get(u).size(); ++i) {
+                EndPoint e = g.getAdjList().get(u).get(i);
                 int v = e.getNodeId();
                 int linkCost = e.getCost();
                 if (finished[v]) continue;
