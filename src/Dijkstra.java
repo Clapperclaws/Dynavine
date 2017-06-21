@@ -15,15 +15,26 @@ import java.util.Set;
  *  This class runs Dijkstra to find the shortest path between a pair of nodes
  */
 public class Dijkstra {
-
 	private Graph g;
 	private boolean[] finished;
 	private int[] predecessors;
 	private int[] distance;
+	private int[][] capacity;
+	private int requiredCap;
     // private Map<Integer, Integer> distance;
 
-    public Dijkstra(Graph graph) {
-       g = new Graph(graph); // Create a copy of the graph
+    public Dijkstra(Graph graph, int[][] capacity, int requiredCap) {
+        this.g = graph;
+        this.capacity = capacity;
+        this.requiredCap = requiredCap;
+       // g = new Graph(graph); // Create a copy of the graph
+    }
+    
+    public Dijkstra(Graph graph, int requiredCap) {
+        this.g = graph;
+        this.capacity = null;
+        this.requiredCap = requiredCap;
+       // g = new Graph(graph); // Create a copy of the graph
     }
     
     protected class PQEntry implements Comparable<PQEntry> {
@@ -82,6 +93,8 @@ public class Dijkstra {
                 EndPoint e = g.getAdjList().get(u).get(i);
                 int v = e.getNodeId();
                 int linkCost = e.getCost();
+                if (capacity != null && capacity[u][v] < requiredCap) continue;
+                else if (e.getBw() < requiredCap) continue;                
                 if (finished[v]) continue;
                 if (distance[v] > distance[u] + linkCost) {
                     distance[v] = distance[u] + linkCost;
