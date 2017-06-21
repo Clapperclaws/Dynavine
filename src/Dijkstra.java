@@ -19,20 +19,17 @@ public class Dijkstra {
     private int[] predecessors;
     private int[] distance;
     private int[][] capacity;
-    private int requiredCap;
     // private Map<Integer, Integer> distance;
 
-    public Dijkstra(Graph graph, int[][] capacity, int requiredCap) {
+    public Dijkstra(Graph graph, int[][] capacity) {
         this.g = graph;
         this.capacity = capacity;
-        this.requiredCap = requiredCap;
         // g = new Graph(graph); // Create a copy of the graph
     }
 
-    public Dijkstra(Graph graph, int requiredCap) {
+    public Dijkstra(Graph graph) {
         this.g = graph;
         this.capacity = null;
-        this.requiredCap = requiredCap;
         // g = new Graph(graph); // Create a copy of the graph
     }
 
@@ -71,7 +68,8 @@ public class Dijkstra {
         }
     }
 
-    public ArrayList<Tuple> getPath(int source, int destination, int requiredCap) {
+    public ArrayList<Tuple> getPath(int source, int destination,
+            int requiredCap) {
         int numNodes = g.getNodeCount();
         finished = new boolean[numNodes];
         predecessors = new int[numNodes];
@@ -84,18 +82,22 @@ public class Dijkstra {
         distance[source] = 0;
         PriorityQueue<PQEntry> pQueue = new PriorityQueue<PQEntry>();
         pQueue.add(new PQEntry(source, 0));
-        while(!pQueue.isEmpty()) {
+        while (!pQueue.isEmpty()) {
             PQEntry entry = pQueue.poll();
             int u = entry.getNodeId();
             finished[u] = true;
-            if (u == destination) break;
+            if (u == destination)
+                break;
             for (int i = 0; i < g.getAdjList().get(u).size(); ++i) {
                 EndPoint e = g.getAdjList().get(u).get(i);
                 int v = e.getNodeId();
                 int linkCost = e.getCost();
-                if (capacity != null && capacity[u][v] < requiredCap) continue;
-                else if (e.getBw() < requiredCap) continue;                
-                if (finished[v]) continue;
+                if (capacity != null && capacity[u][v] < requiredCap)
+                    continue;
+                else if (e.getBw() < requiredCap)
+                    continue;
+                if (finished[v])
+                    continue;
                 if (distance[v] > distance[u] + linkCost) {
                     distance[v] = distance[u] + linkCost;
                     predecessors[v] = u;
@@ -109,9 +111,9 @@ public class Dijkstra {
         ArrayList<Tuple> path = new ArrayList<Tuple>();
         int step = destination;
         path.add(new Tuple(0, predecessors[step], step));
-        while(predecessors[step] != -1) {
+        while (predecessors[step] != -1) {
             path.add(new Tuple(0, predecessors[step], step));
-            step = predecessors[step];       
+            step = predecessors[step];
         }
         return path;
     }
