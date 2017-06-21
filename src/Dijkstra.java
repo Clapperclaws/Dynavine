@@ -8,71 +8,70 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-
 /**
  * 
- * @author saraa
- *  This class runs Dijkstra to find the shortest path between a pair of nodes
+ * @author saraa This class runs Dijkstra to find the shortest path between a
+ *         pair of nodes
  */
 public class Dijkstra {
-	private Graph g;
-	private boolean[] finished;
-	private int[] predecessors;
-	private int[] distance;
-	private int[][] capacity;
-	private int requiredCap;
+    private Graph g;
+    private boolean[] finished;
+    private int[] predecessors;
+    private int[] distance;
+    private int[][] capacity;
+    private int requiredCap;
     // private Map<Integer, Integer> distance;
 
     public Dijkstra(Graph graph, int[][] capacity, int requiredCap) {
         this.g = graph;
         this.capacity = capacity;
         this.requiredCap = requiredCap;
-       // g = new Graph(graph); // Create a copy of the graph
+        // g = new Graph(graph); // Create a copy of the graph
     }
-    
+
     public Dijkstra(Graph graph, int requiredCap) {
         this.g = graph;
         this.capacity = null;
         this.requiredCap = requiredCap;
-       // g = new Graph(graph); // Create a copy of the graph
+        // g = new Graph(graph); // Create a copy of the graph
     }
-    
+
     protected class PQEntry implements Comparable<PQEntry> {
         private int nodeId;
         private int distanceFromSource;
-        
+
         public PQEntry() {
             nodeId = distanceFromSource = -1;
         }
-        
+
         public PQEntry(int nodeId, int distanceFromSource) {
             this.nodeId = nodeId;
             this.distanceFromSource = distanceFromSource;
         }
-        
+
         public void setNodeId(int nodeId) {
             this.nodeId = nodeId;
         }
-        
+
         public int getNodeId() {
             return this.nodeId;
         }
-        
+
         public void setDistanceFromSource(int distanceFromSource) {
             this.distanceFromSource = distanceFromSource;
         }
-        
+
         public int getDistanceFromSource() {
             return distanceFromSource;
         }
-        
+
         @Override
         public int compareTo(PQEntry o) {
             return distanceFromSource - o.distanceFromSource;
         }
     }
-    
-    public void execute(int source) {
+
+    public ArrayList<Tuple> getPath(int source, int destination, int requiredCap) {
         int numNodes = g.getNodeCount();
         finished = new boolean[numNodes];
         predecessors = new int[numNodes];
@@ -89,6 +88,7 @@ public class Dijkstra {
             PQEntry entry = pQueue.poll();
             int u = entry.getNodeId();
             finished[u] = true;
+            if (u == destination) break;
             for (int i = 0; i < g.getAdjList().get(u).size(); ++i) {
                 EndPoint e = g.getAdjList().get(u).get(i);
                 int v = e.getNodeId();
@@ -103,30 +103,16 @@ public class Dijkstra {
                 }
             }
         }
-    }
- 
-    /* This method returns the path from the source to the selected target and
-    * NULL if no path exists
-    */
-    public ArrayList<Tuple> getPath(int target) {
-        LinkedList<Integer> nodePath = new LinkedList<Integer>();
-        int step = target;
-        // check if a path exists
-        if (predecessors[step] == -1) {
+        if (distance[destination] == Integer.MAX_VALUE) {
             return null;
         }
-        nodePath.add(step);
-        while (predecessors[step] != -1) {
-            step = predecessors[step];
-            nodePath.add(step);
-        }
-        // Put it into the correct order
-        Collections.reverse(nodePath);
         ArrayList<Tuple> path = new ArrayList<Tuple>();
-        for(int i = 1; i < nodePath.size(); i++){
-        	path.add(new Tuple(0, nodePath.get(i-1), nodePath.get(i)));
+        int step = destination;
+        path.add(new Tuple(0, predecessors[step], step));
+        while(predecessors[step] != -1) {
+            path.add(new Tuple(0, predecessors[step], step));
+            step = predecessors[step];       
         }
         return path;
     }
-	
 }
