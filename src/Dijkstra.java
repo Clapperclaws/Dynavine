@@ -68,6 +68,8 @@ public class Dijkstra {
         }
     }
 
+    // Gets source, destination, and a threshold capacity. Returns the shortest
+    // path from source to destination with at least that capacity.
     public ArrayList<Tuple> getPath(int source, int destination,
             int requiredCap) {
         int numNodes = g.getNodeCount();
