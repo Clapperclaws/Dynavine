@@ -138,10 +138,8 @@ public class CreateInitialSolution {
                     // Connect Meta Node to the IP Node hosting this VN.
                     EndPoint ep = new EndPoint(counter, 1, 1,
                             EndPoint.type.meta, 0);
-                    collapsedGraph
-                            .addEndPoint(
-                                    sol.vnIp.nodeMapping[vendPoint.getNodeId()],
-                                    ep);
+                    collapsedGraph.addEndPoint(
+                            sol.vnIp.nodeMapping[vendPoint.getNodeId()], ep);
                 }
                 counter++;
             }
@@ -197,8 +195,42 @@ public class CreateInitialSolution {
 
             // EK returned a set of paths only. Figure out the link and node
             // emebdding form the set of paths. Now we need to populate embdSol.
-            OverlayMapping embdSol = new OverlayMapping(
-                    vn.getAdjList().get(startNode).size() + 1);
+            OverlayMapping embdSol = new OverlayMapping(vn.getNodeCount());
+            for (int j = 0; j < adjList.size(); ++j) {
+                EndPoint vendPoint = adjList.get(j);
+                int metanode = vNodeToMetaNodeMap[vendPoint.getNodeId()];
+                if (metanode == -1)
+                    continue;
+                int k = 0;
+                for (; k < embeddingPaths.size(); ++k) {
+                    ArrayList<Tuple> path = embeddingPaths.get(k);
+                    int l = 0;
+                    for (; l < path.size(); ++l) {
+                        Tuple link = path.get(l);
+                        if (link.getSource() == metanode
+                                || link.getDestination() == metanode) {
+                            break;
+                        }
+                    }
+                    if (l < path.size()) {
+                        break;
+                    }
+                }
+                if (k < embeddingPaths.size()) {
+                    // Clean up the path first, i.e., remove meta nodes.
+                    Iterator<Tuple> it = embeddingPaths.get(k).iterator();
+                    while (it.hasNext()) {
+                        Tuple link = it.next();
+                        if (metaNodes.contains(link.getSource())
+                                || metaNodes.contains(link.getDestination())) {
+                            it.remove();
+                        }
+                    }
+                    embdSol.setLinkMappingPath(
+                            new Tuple(0, i, vendPoint.getNodeId()),
+                            embeddingPaths.get(k));
+                }
+            }
 
             aggregateSolution(embdSol, sol);
 
@@ -340,7 +372,7 @@ public class CreateInitialSolution {
         while (true) {
             // Find an augmenting path, i.e., a path that can carry some
             // positive flow.
-            Dijkstra dijkstraDriver = new Dijkstra(collapsedGraph, capacity, 0);
+            Dijkstra dijkstraDriver = new Dijkstra(collapsedGraph, capacity);
             ArrayList<Tuple> path = dijkstraDriver.getPath(source, sink, 0);
 
             // After finding an augmenting path, compute the minimum capacity
