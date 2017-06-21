@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -69,9 +70,7 @@ public class CreateInitialSolution {
 
     public Solutions execute(Graph vn, ArrayList<Integer>[] locationConstraints,
             ArrayList<Integer> order) {
-
         Solutions sol = new Solutions(vn.getAdjList().size(), ipNodesSize);
-
         ArrayList<Integer> settledNodes = new ArrayList<Integer>();
         Random gn = new Random();
 
@@ -81,36 +80,38 @@ public class CreateInitialSolution {
         System.out.println(order);
         // 1- For each node in N
         for (int i = 0; i < order.size(); i++) {
-            counter = otnNodesSize + ipNodesSize; // Restart Counter
+            // Restart Counter.
+            counter = otnNodesSize + ipNodesSize;
 
-            int startNode = order.get(i); // Get the index of the first node in
-                                          // the list
+            // Get the index of the first node in the list.
+            int startNode = order.get(i);
+
             if (settledNodes.contains(startNode))
                 continue;
-            else
-                settledNodes.add(startNode);
-
+            settledNodes.add(startNode);
             System.out.println("Start Node: " + startNode);
 
-            // Select Location Constraint Randomly
+            // Randomly select a node from location constraint set that is not
+            // occupied.
             int sourceLoc = gn.nextInt(locationConstraints[startNode].size());
-            while (sol.vnIp.isOccupied(sourceLoc)) // Make Sure Node is not
-                                                   // Occupied
+            while (sol.vnIp.isOccupied(sourceLoc))
                 sourceLoc = gn.nextInt(locationConstraints[startNode].size());
             System.out.println("Source Node " + sourceLoc);
 
             // 3- Create Metanodes for source's neighbors
             ArrayList<Integer> metaNodes = new ArrayList<Integer>();
+            int[] vNodeToMetaNodeMap = new int[vn.getNodeCount()];
+            Arrays.fill(vNodeToMetaNodeMap, -1);
             int maxLinkCap = 0;
-            for (int j = 0; j < vn.getAdjList().get(startNode).size(); j++) {
+            ArrayList<EndPoint> adjList = vn.getAdjList().get(startNode);
+            for (int j = 0; j < adjList.size(); j++) {
+                EndPoint vendPoint = adjList.get(j);
 
                 // Add to list of Meta Nodes
-                EndPoint ep = new EndPoint(counter, 1, 1, EndPoint.type.meta,
-                        0);
                 metaNodes.add(counter);
-
-                if (vn.getAdjList().get(startNode).get(j).getBw() > maxLinkCap)
-                    maxLinkCap = vn.getAdjList().get(startNode).get(j).getBw();
+                vNodeToMetaNodeMap[vendPoint.getNodeId()] = counter;
+                if (vendPoint.getBw() > maxLinkCap)
+                    maxLinkCap = vendPoint.getBw();
 
                 // Create an Adjacency vector for the meta-node of each
                 // neighboring node
@@ -118,28 +119,28 @@ public class CreateInitialSolution {
                         new ArrayList<EndPoint>());
 
                 // a- Check if the node is settled or not
-                if (!settledNodes.contains(
-                        vn.getAdjList().get(startNode).get(j).getNodeId())) {
+                if (!settledNodes.contains(vendPoint.getNodeId())) {
                     // Add the adjacent nodes to the list of settled nodes
-                    settledNodes.add(
-                            vn.getAdjList().get(startNode).get(j).getNodeId());
+                    settledNodes.add(vendPoint.getNodeId());
 
                     // Add every IP node in the location constraint to the
                     // adjacency list of the MetaNode
-                    for (int k = 0; k < locationConstraints[vn.getAdjList()
-                            .get(startNode).get(j).getNodeId()].size(); k++) {
-                        // collapsedGraph.get(counter).add(new
-                        // EndPoint(locationConstraints[vn.getAdjList()[nodeIndex].get(j).getNodeId()].get(k),1,1,EndPoint.type.ip));
-                        collapsedGraph.addEndPoint(locationConstraints[vn
-                                .getAdjList().get(startNode).get(j).getNodeId()]
+                    for (int k = 0; k < locationConstraints[vendPoint
+                            .getNodeId()].size(); ++k) {
+                        EndPoint ep = new EndPoint(counter, 1, 1,
+                                EndPoint.type.meta, 0);
+                        collapsedGraph.addEndPoint(
+                                locationConstraints[vendPoint.getNodeId()]
                                         .get(k),
                                 ep);
                     }
-                } else {// Connect Meta Node to the IP Node hosting this VN
+                } else {
+                    // Connect Meta Node to the IP Node hosting this VN.
+                    EndPoint ep = new EndPoint(counter, 1, 1,
+                            EndPoint.type.meta, 0);
                     collapsedGraph
                             .addEndPoint(
-                                    sol.vnIp.nodeMapping[vn.getAdjList()
-                                            .get(startNode).get(j).getNodeId()],
+                                    sol.vnIp.nodeMapping[vendPoint.getNodeId()],
                                     ep);
                 }
                 counter++;
@@ -149,12 +150,11 @@ public class CreateInitialSolution {
             int sink = counter;
             System.out.println("Sink Node " + sink);
             collapsedGraph.addEndPointList(counter, new ArrayList<EndPoint>());
-
-            EndPoint sinkMetaNode = new EndPoint(counter, 1, 1,
-                    EndPoint.type.meta, 0);
-            for (int j = 0; j < metaNodes.size(); j++)
+            for (int j = 0; j < metaNodes.size(); j++) {
+                EndPoint sinkMetaNode = new EndPoint(counter, 1, 1,
+                        EndPoint.type.meta, 0);
                 collapsedGraph.addEndPoint(metaNodes.get(j), sinkMetaNode);
-
+            }
             metaNodes.add(counter);
             counter++;
 
@@ -183,13 +183,23 @@ public class CreateInitialSolution {
                     counter++;
                 }
             }
-
             System.out.println(
                     "Collapsed Graph with Meta Nodes \n" + collapsedGraph);
 
             // 4- Call EK
-            OverlayMapping embdSol = MaxFlow(collapsedGraph, sourceLoc, sink,
-                    maxLinkCap, (vn.getAdjList().get(startNode).size() + 1));
+            ArrayList<ArrayList<Tuple>> embeddingPaths = MaxFlow(collapsedGraph,
+                    sourceLoc, sink, maxLinkCap,
+                    (vn.getAdjList().get(startNode).size() + 1));
+
+            // Could not find sufficient paths; Embedding failed.
+            if (embeddingPaths == null)
+                return null;
+
+            // EK returned a set of paths only. Figure out the link and node
+            // emebdding form the set of paths. Now we need to populate embdSol.
+            OverlayMapping embdSol = new OverlayMapping(
+                    vn.getAdjList().get(startNode).size() + 1);
+
             aggregateSolution(embdSol, sol);
 
             // 7- Delete All MetaNodes
@@ -204,20 +214,17 @@ public class CreateInitialSolution {
                     .subList((ipNodesSize + otnNodesSize),
                             collapsedGraph.getNodeCount());
             collapsedGraph.getAdjList().removeAll(subList);
-
             System.out.println("Collapsed Graph after removal of MetaNodes:\n"
                     + collapsedGraph);
-
             if (settledNodes.size() == vn.getAdjList().size())
                 break;
         }
-
         System.out.println("Solution :" + sol);
         return sol;
     }
 
     // This function iteratively aggregates the final Solution after every
-    // iteration
+    // iteration.
     public void aggregateSolution(OverlayMapping embdSol, Solutions sol) {
         sol.vnIp.incrementNodeEmbed(embdSol);
 
@@ -235,15 +242,14 @@ public class CreateInitialSolution {
                 int ipSrc = src;
                 int ipDst = linkMapping.get(linkMapping.size() - 1)
                         .getDestination();
-                sol.ipOtn.nodeMapping[src] = dst; // Add the OTN dst as the Node
-                                                  // embedding of the IP src
+
+                // Add the OTN dst as the Node embedding of the IP src.
+                sol.ipOtn.nodeMapping[src] = dst;
+
+                // Add the OTN src as the Node embedding of the IP dst.
                 sol.ipOtn.nodeMapping[ipDst] = linkMapping
-                        .get(linkMapping.size() - 1).getSource(); // Add the OTN
-                                                                  // src as the
-                                                                  // Node
-                                                                  // embedding
-                                                                  // of the IP
-                                                                  // dst
+                        .get(linkMapping.size() - 1).getSource();
+
                 ArrayList<Tuple> linkEmbedding = linkMapping;
                 linkEmbedding.remove(ipSrc);
                 linkEmbedding.remove(ipDst);
@@ -276,7 +282,6 @@ public class CreateInitialSolution {
 
     // Returns a shuffled order of VN nodes
     public ArrayList<Integer> getListOrder(Graph vn) {
-
         ArrayList<Integer> order = new ArrayList<Integer>();
         for (int i = 0; i < vn.getAdjList().size(); i++)
             order.add(i);
@@ -289,11 +294,134 @@ public class CreateInitialSolution {
      * input the collapsed graph, the source & sink meta nodes, the maxLinkCap,
      * and the size of the overlay mapping solution "N"
      */
-    public OverlayMapping MaxFlow(Graph collapsedGraph, int source, int sink,
-            int maxLinkCap, int N) {
-        OverlayMapping embdSol = new OverlayMapping(N);
+    public ArrayList<ArrayList<Tuple>> MaxFlow(Graph collapsedGraph, int source,
+            int sink, int maxLinkCap, int N) {
+        final int kNodeCount = collapsedGraph.getNodeCount();
+        int[][] capacity = new int[kNodeCount][kNodeCount];
+        int[][] flow = new int[kNodeCount][kNodeCount];
+        int numNodes = collapsedGraph.getNodeCount();
 
-        return embdSol;
+        // List of augmenting paths that we've found while running max-flow.
+        ArrayList<ArrayList<Tuple>> augPaths = new ArrayList<ArrayList<Tuple>>();
+
+        // A reverse mapping between a link in the collapsed graph and the
+        // augmenting path that link belongs to. We store an int[] against the
+        // link. int[0] is the index of augmenting path from the list of
+        // augmenting paths. int[1] is the index of the link inside that
+        // augmenting path.
+        HashMap<Tuple, ArrayList<int[]>> linkToPathMap = new HashMap<Tuple, ArrayList<int[]>>();
+
+        // Initialize capacity matrix. capacity[metanode][u] = 0;
+        // capacity[source][u] = num_vlinks_to_embed, (that is N - 1),
+        // capacity[u][v] = bw_capacity / maxLinkCap.
+        for (int i = 0; i < numNodes; ++i) {
+            ArrayList<EndPoint> adjList = collapsedGraph.getAdjList().get(i);
+            for (int j = 0; j < adjList.size(); ++j) {
+                EndPoint endPoint = adjList.get(j);
+                if (endPoint.getT() == EndPoint.type.meta) {
+                    capacity[i][endPoint.getNodeId()] = 1;
+                    capacity[endPoint.getNodeId()][i] = 0;
+                } else {
+                    capacity[i][endPoint.getNodeId()] = endPoint.getBw()
+                            / maxLinkCap;
+                }
+            }
+        }
+
+        // Set capacity[u][metanode] = 1,
+        for (int i = 0; i < collapsedGraph.getAdjList().get(source)
+                .size(); ++i) {
+            int v = collapsedGraph.getAdjList().get(source).get(i).getNodeId();
+            capacity[source][v] = N - 1;
+            capacity[v][source] = N - 1;
+        }
+
+        int maxFlow = 0;
+        while (true) {
+            // Find an augmenting path, i.e., a path that can carry some
+            // positive flow.
+            Dijkstra dijkstraDriver = new Dijkstra(collapsedGraph, capacity, 0);
+            dijkstraDriver.execute(source);
+            ArrayList<Tuple> path = dijkstraDriver.getPath(sink);
+
+            // After finding an augmenting path, compute the minimum capacity
+            // available along this path. That would be how much flow we are
+            // able to push. For our specific problem, this number should be 1.
+            int minCap = Integer.MAX_VALUE;
+            for (int i = 0; i < path.size(); ++i) {
+                Tuple link = path.get(i);
+                minCap = Math.min(minCap,
+                        capacity[link.getSource()][link.getDestination()]);
+            }
+            if (minCap == Integer.MAX_VALUE)
+                break;
+
+            maxFlow += minCap;
+            augPaths.add(path);
+            // We now push minCap units of flow through the augmenting path.
+            // Update the residual capacities and flow matrix accordingly.
+            for (int i = 0; i < path.size(); ++i) {
+                Tuple link = path.get(i);
+                capacity[link.getSource()][link.getDestination()] -= minCap;
+                capacity[link.getDestination()][link.getSource()] += minCap;
+                flow[link.getSource()][link.getDestination()] += minCap;
+                flow[link.getDestination()][link.getSource()] -= minCap;
+
+                // Populate the reverse mapping between a link and the
+                // augmenting path the link belongs to.
+                int[] pair = new int[2];
+                pair[0] = augPaths.size() - 1;
+                pair[1] = i;
+                if (linkToPathMap.get(link) == null) {
+                    linkToPathMap.put(link, new ArrayList<int[]>());
+                }
+                linkToPathMap.get(link).add(pair);
+            }
+        }
+
+        // If maximum flow is less than the number of links to be embedded this
+        // means that embedding has failed.
+        if (maxFlow < N - 1)
+            return null;
+
+        // Construct flow paths from augmenting paths. The algorithm is as
+        // follows: If augmenting path a and b contains links (u, v) and (v, u),
+        // respectively, then it means flow along (u, v) is cancelled by b by
+        // pushing flow along (v, u). In this case, we splice up the path a with
+        // the sub-path following (v, u) in b. Similar operation is performed on
+        // b as well.
+        ArrayList<ArrayList<Tuple>> flowPaths = new ArrayList<ArrayList<Tuple>>();
+        for (int i = 0; i < augPaths.size(); ++i) {
+            ArrayList<Tuple> tentativeFlowPath = new ArrayList<Tuple>(
+                    augPaths.get(i));
+            int k = 0;
+            while (k < tentativeFlowPath.size()) {
+                Tuple link = augPaths.get(i).get(k);
+                Tuple reverseLink = new Tuple(link.getOrder(),
+                        link.getDestination(), link.getSource());
+                ArrayList<int[]> pairs = linkToPathMap.get(reverseLink);
+                if (pairs != null) {
+                    // A link on the tentative flow path is cancelled by a
+                    // reverse link on another path. Now we splice up the paths
+                    // and create a new one.
+                    if (pairs.size() > 0) {
+                        int[] pair = pairs.get(0).clone();
+                        pairs.remove(0);
+                        int otherPathIndex = pair[0];
+                        int reverseLinkIndex = pair[1];
+                        tentativeFlowPath = (ArrayList<Tuple>) tentativeFlowPath
+                                .subList(0, k - 1);
+                        tentativeFlowPath.addAll(augPaths.get(otherPathIndex)
+                                .subList(reverseLinkIndex + 1,
+                                        augPaths.get(otherPathIndex).size()));
+                    }
+
+                } else
+                    ++k;
+            }
+            flowPaths.add(tentativeFlowPath);
+        }
+        return flowPaths;
     }
 
 }
