@@ -258,57 +258,97 @@ public class CreateInitialSolution {
     // This function iteratively aggregates the final Solution after every
     // iteration.
     public void aggregateSolution(OverlayMapping embdSol, Solutions sol) {
-        sol.vnIp.incrementNodeEmbed(embdSol);
-
-        // 5- Find Newly Created IP Links
+       
+    	//1- Aggregate Node Mapping Solution to Final Solution
+    	sol.vnIp.incrementNodeEmbed(embdSol);
+    	
+    	//2- Aggregate Link Mapping Solution to Final Solution
         Iterator it = embdSol.linkMapping.entrySet().iterator();
-        while (it.hasNext()) {
+        while (it.hasNext()) { // For every path
             Map.Entry pair = (Map.Entry) it.next();
-            Tuple t = (Tuple) pair.getKey();
-            ArrayList<Tuple> linkMapping = (ArrayList<Tuple>) pair.getValue();
-            // Examine First Link
-            int src = linkMapping.get(0).getSource();
-            int dst = linkMapping.get(0).getDestination();
-            // Case of New IP Link
-            if (dst >= ipNodesSize && dst < (otnNodesSize + ipNodesSize)) {
-                int ipSrc = src;
-                int ipDst = linkMapping.get(linkMapping.size() - 1)
-                        .getDestination();
+            
+            // Get the Virtual Link 
+            Tuple t = (Tuple) pair.getKey(); 
+            
+            // Get the Path
+            ArrayList<Tuple> linkMapping = (ArrayList<Tuple>) pair.getValue(); 
+            
+            //Initialize a Path entry for the VLink
+            sol.vnIp.linkMapping.put((Tuple)pair, new ArrayList<Tuple>());
+            
+            //Initialize Potential Variables that will be used to populate New IP Link Path
+            ArrayList<Tuple> newIpLinkPath = new ArrayList<Tuple>();
+            int srcIP = -1;
+            int dstIP = -1;
+            for(int i=0;i<linkMapping.size();i++){
+            	
+            	// Examine  Link
+                int src = linkMapping.get(i).getSource();
+                int dst = linkMapping.get(i).getDestination();
+                
+                //Case of IP -> IP
+                if((src >=0 && src <ipNodesSize) && (dst >=0 && dst <ipNodesSize)){
+                	//Add to VLink Path in VN->IP overlay solution
+                	 sol.vnIp.linkMapping.get((Tuple)pair).add(linkMapping.get(i));
+                }
+              
+                // Case of IP -> OTN
+                if ((src >=0 && src <ipNodesSize)&&
+                		dst >= ipNodesSize && dst < (otnNodesSize + ipNodesSize)) {
+                	
+                	// Add the OTN dst as the Node embedding of the IP src.
+                    sol.ipOtn.nodeMapping[src] = dst;
+                    srcIP = src;
+                    
+                    //Initialize a new path in the IP->OTN Solution
+                    newIpLinkPath = new ArrayList<Tuple>();
+                }
+                
+                // Case of New OTN -> OTN
+                if ((src >= ipNodesSize && src < (otnNodesSize + ipNodesSize))&&
+                		dst >= ipNodesSize && dst < (otnNodesSize + ipNodesSize)) {
+                	
+                	// Add link to IP Path
+                	newIpLinkPath.add(linkMapping.get(i));
+                }
+                
+                // Case of OTN -> IP
+                if ((dst >=0 && dst <ipNodesSize)&&
+                		src >= ipNodesSize && src < (otnNodesSize + ipNodesSize)) {
+                	
+                	// Add the OTN src as the Node embedding of the IP dst.
+                    sol.ipOtn.nodeMapping[dst] = src;
+                    dstIP = dst;
+              
+                    //Find the order of the new IP Link
+                    int tupleOrder = collapsedGraph.findTupleOrder(srcIP, dstIP);
+                    
+                    //Create new Tup for the IP Link
+                    Tuple ipTup = new Tuple(srcIP,dstIP,tupleOrder);
+                    
+                    //Add the path in the IP->OTN Overlay Solution
+                    sol.ipOtn.linkMapping.put(ipTup,newIpLinkPath);
+                    
+                    //Add the IP Link in the VN->IP Overlay Solution
+                    sol.vnIp.linkMapping.get((Tuple)pair).add(ipTup);                  
 
-                // Add the OTN dst as the Node embedding of the IP src.
-                sol.ipOtn.nodeMapping[src] = dst;
+                    // Get Bandwidth Capacity of new IP Link
+                    int newIPLinkCap = Math.min(
+                            collapsedGraph.getPortCapacity()[srcIP],
+                            collapsedGraph.getPortCapacity()[dstIP]);
 
-                // Add the OTN src as the Node embedding of the IP dst.
-                sol.ipOtn.nodeMapping[ipDst] = linkMapping
-                        .get(linkMapping.size() - 1).getSource();
+                    // Add ipSrc as neighbor of ipDst
+                    collapsedGraph.addEndPoint(srcIP, new EndPoint(dstIP, 1,
+                            newIPLinkCap, EndPoint.type.ip, tupleOrder));
 
-                ArrayList<Tuple> linkEmbedding = linkMapping;
-                linkEmbedding.remove(ipSrc);
-                linkEmbedding.remove(ipDst);
-
-                // Create Tuple & Add Link Embedding Solution
-                int tupleOrder = collapsedGraph.findTupleOrder(ipSrc, ipDst);
-                Tuple newTup = new Tuple(ipSrc, ipDst, tupleOrder);
-                sol.ipOtn.linkMapping.put(newTup, linkEmbedding);
-
-                // Add Tuple to list of newly created Links
-                sol.newIpLinks.add(newTup);
-
-                // Get Bandwidth Capacity of new IP Link
-                int newIPLinkCap = Math.min(
-                        collapsedGraph.getPortCapacity()[ipSrc],
-                        collapsedGraph.getPortCapacity()[ipDst]);
-
-                // Add ipSrc as neighbor of ipDst - Figure out the order
-                collapsedGraph.addEndPoint(ipSrc, new EndPoint(ipDst, 1,
-                        newIPLinkCap, EndPoint.type.ip, tupleOrder));
-
-                // Add ipDst as neighbor of ipSrc - Figure out the order
-                collapsedGraph.addEndPoint(ipDst, new EndPoint(ipSrc, 1,
-                        newIPLinkCap, EndPoint.type.ip, tupleOrder));
+                    // Add ipDst as neighbor of ipSrc 
+                    collapsedGraph.addEndPoint(dstIP, new EndPoint(srcIP, 1,
+                            newIPLinkCap, EndPoint.type.ip, tupleOrder));
+                
+                    // Add IP Link to the list of new IP Links
+                    sol.newIpLinks.add(ipTup);
+                }       
             }
-            // Case of Existing IP Links
-            sol.vnIp.linkMapping.put(t, linkMapping);
         }
     }
 

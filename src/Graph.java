@@ -138,7 +138,24 @@ public class Graph {
 		return metaNodes;
 	}
 			
-
+	public int getAdjBW(int nodeId){
+		int bw = 0;
+		for(int i=0;i<getAllEndPoints(nodeId).size();i++)
+			bw += getAllEndPoints(nodeId).get(i).getBw();
+		
+		return bw;
+	}
+	
+	public int getAdjBWByTpe(int nodeId, EndPoint.type t){
+		int bw = 0;
+		for(int i=0;i<getAllEndPoints(nodeId).size();i++){
+			if(getAllEndPoints(nodeId).get(i).getT().equals(t))
+				bw += getAllEndPoints(nodeId).get(i).getBw();
+		}
+		
+		return bw;
+	}
+	
 	//This function returns the # of IP links between the same source & destination nodes
 	public int findTupleOrder(int src, int dst){
 		int order = 0;
