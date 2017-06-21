@@ -381,8 +381,7 @@ public class CreateInitialSolution {
             // Find an augmenting path, i.e., a path that can carry some
             // positive flow.
             Dijkstra dijkstraDriver = new Dijkstra(collapsedGraph, capacity, 0);
-            dijkstraDriver.execute(source);
-            ArrayList<Tuple> path = dijkstraDriver.getPath(sink);
+            ArrayList<Tuple> path = dijkstraDriver.getPath(source, sink, 0);
 
             // After finding an augmenting path, compute the minimum capacity
             // available along this path. That would be how much flow we are
