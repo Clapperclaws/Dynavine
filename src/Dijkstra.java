@@ -16,7 +16,9 @@ import java.util.Set;
 public class Dijkstra {
     private Graph g;
     private boolean[] finished;
-    private int[] predecessors;
+    // predecessor[i][0] is the node preceeding i; predecessors[i][1] is the
+    // order of the link that connects predecessor[i][0] to i.
+    private int[][] predecessors;
     private int[] distance;
     private int[][][] capacity;
     // private Map<Integer, Integer> distance;
@@ -74,11 +76,11 @@ public class Dijkstra {
             int requiredCap) {
         int numNodes = g.getNodeCount();
         finished = new boolean[numNodes];
-        predecessors = new int[numNodes];
+        predecessors = new int[numNodes][2];
         distance = new int[numNodes];
         for (int i = 0; i < g.getNodeCount(); ++i) {
             distance[i] = Integer.MAX_VALUE;
-            predecessors[i] = -1;
+            predecessors[i][0] = predecessors[i][1] = -1;
             finished[i] = false;
         }
         distance[source] = 0;
@@ -103,7 +105,8 @@ public class Dijkstra {
                     continue;
                 if (distance[v] > distance[u] + linkCost) {
                     distance[v] = distance[u] + linkCost;
-                    predecessors[v] = u;
+                    predecessors[v][0] = u;
+                    predecessors[v][1] = order;
                     pQueue.add(new PQEntry(v, distance[v]));
                 }
             }
@@ -113,12 +116,13 @@ public class Dijkstra {
         }
         ArrayList<Tuple> path = new ArrayList<Tuple>();
         int step = destination;
-        
-        while (predecessors[step] != -1) {
-            path.add(new Tuple(0, step,predecessors[step]));
-            step = predecessors[step];
-        }    
-        
+
+        while (predecessors[step][0] != -1) {
+            path.add(new Tuple(predecessors[step][1], step,
+                    predecessors[step][0]));
+            step = predecessors[step][0];
+        }
+
         return path;
     }
 }
