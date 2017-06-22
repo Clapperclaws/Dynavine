@@ -18,10 +18,10 @@ public class Dijkstra {
     private boolean[] finished;
     private int[] predecessors;
     private int[] distance;
-    private int[][] capacity;
+    private int[][][] capacity;
     // private Map<Integer, Integer> distance;
 
-    public Dijkstra(Graph graph, int[][] capacity) {
+    public Dijkstra(Graph graph, int[][][] capacity) {
         this.g = graph;
         this.capacity = capacity;
         // g = new Graph(graph); // Create a copy of the graph
@@ -93,8 +93,9 @@ public class Dijkstra {
             for (int i = 0; i < g.getAdjList().get(u).size(); ++i) {
                 EndPoint e = g.getAdjList().get(u).get(i);
                 int v = e.getNodeId();
+                int order = e.getOrder();
                 int linkCost = e.getCost();
-                if (capacity != null && capacity[u][v] < requiredCap)
+                if (capacity != null && capacity[u][v][order] < requiredCap)
                     continue;
                 else if (e.getBw() < requiredCap)
                     continue;
