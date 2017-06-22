@@ -286,7 +286,7 @@ public class CreateInitialSolution {
             ArrayList<Tuple> linkMapping = (ArrayList<Tuple>) pair.getValue();
 
             // Initialize a Path entry for the VLink
-            sol.vnIp.linkMapping.put((Tuple) pair, new ArrayList<Tuple>());
+            sol.vnIp.linkMapping.put((Tuple) pair.getKey(), new ArrayList<Tuple>());
 
             // Initialize Potential Variables that will be used to populate New
             // IP Link Path
@@ -303,7 +303,7 @@ public class CreateInitialSolution {
                 if ((src >= 0 && src < ipNodesSize)
                         && (dst >= 0 && dst < ipNodesSize)) {
                     // Add to VLink Path in VN->IP overlay solution
-                    sol.vnIp.linkMapping.get((Tuple) pair)
+                    sol.vnIp.linkMapping.get((Tuple) pair.getKey())
                             .add(linkMapping.get(i));
                 }
 
@@ -341,13 +341,13 @@ public class CreateInitialSolution {
                             dstIP);
 
                     // Create new Tup for the IP Link
-                    Tuple ipTup = new Tuple(srcIP, dstIP, tupleOrder);
+                    Tuple ipTup = new Tuple(tupleOrder,srcIP, dstIP);
 
                     // Add the path in the IP->OTN Overlay Solution
                     sol.ipOtn.linkMapping.put(ipTup, newIpLinkPath);
 
                     // Add the IP Link in the VN->IP Overlay Solution
-                    sol.vnIp.linkMapping.get((Tuple) pair).add(ipTup);
+                    sol.vnIp.linkMapping.get((Tuple) pair.getKey()).add(ipTup);
 
                     // Get Bandwidth Capacity of new IP Link
                     int newIPLinkCap = Math.min(
