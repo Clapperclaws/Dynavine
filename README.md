@@ -1,4 +1,4 @@
-# Dynavine
+# FAST-MULE
 ## Input file format
 
 The following files are required for the program to run:
