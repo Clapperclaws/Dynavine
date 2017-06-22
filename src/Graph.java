@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /*Generic Graph that will be used to represent virtual, IP, and OTN graphs*/
 public class Graph {
@@ -16,6 +17,8 @@ public class Graph {
 		}
 		ports = new int[N];
 		portCapacity = new int[N];
+		Arrays.fill(ports, -1);
+		Arrays.fill(portCapacity, -1);
 	}
 	
 	//Copy Constructor
