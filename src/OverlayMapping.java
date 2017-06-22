@@ -56,8 +56,11 @@ public class OverlayMapping {
 	
 	//This Function Aggregates Node Placement
 	public void incrementNodeEmbed(OverlayMapping sol){
-		for(int i=0;i<sol.nodeMapping.length;i++)
-			this.nodeMapping[i] = sol.nodeMapping[i];
+		for(int i=0;i<sol.nodeMapping.length;i++) {
+		    if (sol.nodeMapping[i] != -1) {
+		        this.nodeMapping[i] = sol.nodeMapping[i];
+		    }
+		}
 	}
 
 	//This function returns true if a given IP node (indicated by nodeIndex) is occupied
