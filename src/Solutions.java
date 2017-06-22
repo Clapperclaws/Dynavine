@@ -49,8 +49,11 @@ public class Solutions {
 		content += vnIp+"\n";
 		content +=  "**** IP -> OTN **** \n";
 		content += ipOtn+"\n";
+		content += "**** New IP Links **** \n";
+		content += newIpLinks.toString()+"\n";
 		return content;
 	}
+
 	
 }
 
