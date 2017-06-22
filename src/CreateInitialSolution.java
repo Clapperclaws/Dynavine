@@ -27,12 +27,9 @@ public class CreateInitialSolution {
         // the capacity of the link to the capacity of the port and cost to 1.
         for (int i = 0; i < ip.getAdjList().size(); i++) {
             for (int order = 0; order < ip.getPorts()[i]; ++order) {
-                collapsedGraph.addEndPoint(i,
-                        new EndPoint(
-                                ip.getAdjList().size()
-                                        + ipOtn.getNodeMapping(i),
-                                1, ip.getPortCapacity()[i],
-                                EndPoint.type.otn, order));
+                collapsedGraph.addEndPoint(i, new EndPoint(
+                        ip.getAdjList().size() + ipOtn.getNodeMapping(i), 1,
+                        ip.getPortCapacity()[i], EndPoint.type.otn, order));
                 collapsedGraph.addEndPoint(
                         ip.getAdjList().size() + ipOtn.getNodeMapping(i),
                         new EndPoint(i, 1, ip.getPortCapacity()[i],
@@ -250,7 +247,7 @@ public class CreateInitialSolution {
                 }
             }
 
-            aggregateSolution(embdSol, sol);
+            aggregateSolution(vn, embdSol, sol);
 
             // 7- Delete All MetaNodes
             for (int j = 0; j < ipNodesSize; j++) {
@@ -275,20 +272,18 @@ public class CreateInitialSolution {
 
     // This function iteratively aggregates the final Solution after every
     // iteration.
-    public void aggregateSolution(OverlayMapping embdSol, Solutions sol) {
-
+    public void aggregateSolution(Graph vn, OverlayMapping embdSol,
+            Solutions sol) {
         // 1- Aggregate Node Mapping Solution to Final Solution
         sol.vnIp.incrementNodeEmbed(embdSol);
 
         // 2- Aggregate Link Mapping Solution to Final Solution
         Iterator it = embdSol.linkMapping.entrySet().iterator();
-        while (it.hasNext()) { // For every path
+        while (it.hasNext()) {
             Map.Entry pair = (Map.Entry) it.next();
 
-            // Get the Virtual Link
-            Tuple t = (Tuple) pair.getKey();
-
-            // Get the Path
+            // Get the Virtual Link and its embedding path.
+            Tuple vLink = (Tuple) pair.getKey();
             ArrayList<Tuple> linkMapping = (ArrayList<Tuple>) pair.getValue();
 
             // Initialize a Path entry for the VLink
@@ -301,7 +296,6 @@ public class CreateInitialSolution {
             int srcIP = -1;
             int dstIP = -1;
             for (int i = 0; i < linkMapping.size(); i++) {
-
                 // Examine Link
                 int src = linkMapping.get(i).getSource();
                 int dst = linkMapping.get(i).getDestination();
@@ -347,7 +341,7 @@ public class CreateInitialSolution {
                     int tupleOrder = collapsedGraph.findTupleOrder(srcIP,
                             dstIP);
 
-                    // Create new Tup for the IP Link
+                    // Create new Tuple for the IP Link
                     Tuple ipTup = new Tuple(tupleOrder, srcIP, dstIP);
 
                     // Add the path in the IP->OTN Overlay Solution
@@ -371,8 +365,48 @@ public class CreateInitialSolution {
 
                     // Add IP Link to the list of new IP Links
                     sol.newIpLinks.add(ipTup);
+
+                    // Update IP Ports
+                    collapsedGraph.setPort(srcIP,
+                            collapsedGraph.getPorts()[srcIP] - 1);
+                    collapsedGraph.setPort(dstIP,
+                            collapsedGraph.getPorts()[dstIP] - 1);
+
+                    // Update OTN Links Capacity
+                    updateResidualCapacity(ipTup, newIpLinkPath, newIPLinkCap);
                 }
             }
+            int vLinkDestIndex = vn.getNodeIndex(vLink.getSource(),
+                    vLink.getDestination(), vLink.getOrder());
+            int bw = vn.getAdjList().get(vLink.getSource()).get(vLinkDestIndex)
+                    .getBw();
+            updateResidualCapacity(vLink, sol.vnIp.linkMapping.get(vLink), bw);
+        }
+    }
+
+    public void updateResidualCapacity(Tuple t, ArrayList<Tuple> path, int bw) {
+        // Update Network Capacity
+        for (int k = 0; k < path.size(); k++) {
+            // Get the first edge of the link
+            int src = path.get(k).getSource();
+            // Get the second edge of the link
+            int dst = path.get(k).getDestination();
+            // Find the index of the second edge
+            int dstIndex = collapsedGraph.getNodeIndex(src, dst,
+                    path.get(k).getOrder());
+            // Find the index of the first edge
+            int srcIndex = collapsedGraph.getNodeIndex(dst, src,
+                    path.get(k).getOrder());
+
+            // Update BW Capacity for the first edge
+            collapsedGraph.getAdjList().get(src).get(dstIndex).setBw(
+                    collapsedGraph.getAdjList().get(src).get(dstIndex).getBw()
+                            - bw);
+
+            // Update BW Capacity for the second edge
+            collapsedGraph.getAdjList().get(dst).get(srcIndex).setBw(
+                    collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw()
+                            - bw);
         }
     }
 
@@ -393,8 +427,20 @@ public class CreateInitialSolution {
     public ArrayList<ArrayList<Tuple>> MaxFlow(Graph collapsedGraph, int source,
             int sink, int maxLinkCap, int N) {
         final int kNodeCount = collapsedGraph.getNodeCount();
-        int[][] capacity = new int[kNodeCount][kNodeCount];
-        int[][] flow = new int[kNodeCount][kNodeCount];
+        int[][][] capacity = new int[kNodeCount][kNodeCount][];
+        int[][][] flow = new int[kNodeCount][kNodeCount][];
+        for (int i = 0; i < collapsedGraph.getNodeCount(); ++i) {
+            for (int j = 0; j < collapsedGraph.getNodeCount(); ++j) {
+                if (collapsedGraph.getPorts()[i] != -1) {
+                    capacity[i][j] = new int[collapsedGraph.getPorts()[i]];
+                    flow[i][j] = new int[collapsedGraph.getPorts()[i]];
+                } else {
+                    capacity[i][j] = new int[1];
+                    flow[i][j] = new int[1];
+                }
+            }
+        }
+
         int numNodes = collapsedGraph.getNodeCount();
 
         // List of augmenting paths that we've found while running max-flow.
@@ -415,11 +461,11 @@ public class CreateInitialSolution {
             for (int j = 0; j < adjList.size(); ++j) {
                 EndPoint endPoint = adjList.get(j);
                 if (endPoint.getT() == EndPoint.type.meta) {
-                    capacity[i][endPoint.getNodeId()] = 1;
-                    capacity[endPoint.getNodeId()][i] = 0;
+                    capacity[i][endPoint.getNodeId()][endPoint.getOrder()] = 1;
+                    capacity[endPoint.getNodeId()][i][endPoint.getOrder()] = 0;
                 } else {
-                    capacity[i][endPoint.getNodeId()] = endPoint.getBw()
-                            / maxLinkCap;
+                    capacity[i][endPoint.getNodeId()][endPoint
+                            .getOrder()] = endPoint.getBw() / maxLinkCap;
                 }
             }
         }
@@ -427,9 +473,11 @@ public class CreateInitialSolution {
         // Set capacity[u][metanode] = 1,
         for (int i = 0; i < collapsedGraph.getAdjList().get(source)
                 .size(); ++i) {
-            int v = collapsedGraph.getAdjList().get(source).get(i).getNodeId();
-            capacity[source][v] = N - 1;
-            capacity[v][source] = N - 1;
+            EndPoint endPoint = collapsedGraph.getAdjList().get(source).get(i);
+            int v = endPoint.getNodeId();
+            int order = endPoint.getOrder();
+            capacity[source][v][order] = N - 1;
+            capacity[v][source][order] = N - 1;
         }
 
         int maxFlow = 0;
@@ -446,7 +494,8 @@ public class CreateInitialSolution {
             for (int i = 0; i < path.size(); ++i) {
                 Tuple link = path.get(i);
                 minCap = Math.min(minCap,
-                        capacity[link.getSource()][link.getDestination()]);
+                        capacity[link.getSource()][link.getDestination()][link
+                                .getOrder()]);
             }
             if (minCap == Integer.MAX_VALUE)
                 break;
@@ -457,10 +506,14 @@ public class CreateInitialSolution {
             // Update the residual capacities and flow matrix accordingly.
             for (int i = 0; i < path.size(); ++i) {
                 Tuple link = path.get(i);
-                capacity[link.getSource()][link.getDestination()] -= minCap;
-                capacity[link.getDestination()][link.getSource()] += minCap;
-                flow[link.getSource()][link.getDestination()] += minCap;
-                flow[link.getDestination()][link.getSource()] -= minCap;
+                capacity[link.getSource()][link.getDestination()][link
+                        .getOrder()] -= minCap;
+                capacity[link.getDestination()][link.getSource()][link
+                        .getOrder()] += minCap;
+                flow[link.getSource()][link.getDestination()][link
+                        .getOrder()] += minCap;
+                flow[link.getDestination()][link.getSource()][link
+                        .getOrder()] -= minCap;
 
                 // Populate the reverse mapping between a link and the
                 // augmenting path the link belongs to.
@@ -518,5 +571,4 @@ public class CreateInitialSolution {
         }
         return flowPaths;
     }
-
 }
