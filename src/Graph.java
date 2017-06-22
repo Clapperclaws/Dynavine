@@ -187,11 +187,14 @@ public class Graph {
 
     // Print the complete Adjacency List
     public String toString() {
-        String content = "Adjacency List:\n";
-        for (int i = 0; i < adjList.size(); i++)
-            content += "- Node " + i + " is attached to: \n"
-                    + adjList.get(i).toString() + "\n";
-        return content;
+    	String content = "Adjacency List:\n";
+		for(int i=0;i<adjList.size();i++)
+			content += "- Node "+i+" is attached to: \n"+adjList.get(i).toString()+"\n";
+		
+		for(int i=0;i<ports.length;i++)
+			content+= "Node "+i+" has "+ ports[i]+" ports, each of capacity "+portCapacity[i]+"\n";
+		
+		return content;
     }
 
 }
