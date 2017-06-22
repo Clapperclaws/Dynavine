@@ -16,6 +16,11 @@ public class OverlayMapping {
 	//Initialization Constructor
 	public OverlayMapping(int N){
 		nodeMapping = new int[N];
+		
+		//Initialize Node Mapping Solution to -1
+		for(int i=0;i<nodeMapping.length;i++)
+			nodeMapping[i] = -1;
+	
 		linkMapping = new HashMap<Tuple, ArrayList<Tuple>>();	
 	}
 	
@@ -67,8 +72,11 @@ public class OverlayMapping {
 	//Print the content of the overlay mapping
 	public String toString(){
 		String content ="";
-		for(int i=0;i < nodeMapping.length;i++)
+		for(int i=0;i < nodeMapping.length;i++){
+			if(nodeMapping[i] == -1)
+				continue;
 			content +=" Node at index "+i+" is mapped to Physical Node Index "+nodeMapping[i]+"\n";
+		}
 		
 		Iterator it = linkMapping.entrySet().iterator();
 	    while (it.hasNext()) {
