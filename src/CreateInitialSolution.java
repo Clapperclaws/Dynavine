@@ -22,16 +22,22 @@ public class CreateInitialSolution {
 
         // Create Collapsed Graph
         collapsedGraph = new Graph(ip, otn);
-        // Create new IP Links that connects the IP node to the OTN node - Cost
-        // of 1 and unlimited capacity
+        // Create new IP Links that connects the IP node to the OTN node. For
+        // each free port in the IP node create a link with the OTN node. Set
+        // the capacity of the link to the capacity of the port and cost to 1.
         for (int i = 0; i < ip.getAdjList().size(); i++) {
-            collapsedGraph.addEndPoint(i,
-                    new EndPoint(
-                            ip.getAdjList().size() + ipOtn.getNodeMapping(i), 1,
-                            Integer.MAX_VALUE, EndPoint.type.otn, 0));
-            collapsedGraph.addEndPoint(
-                    ip.getAdjList().size() + ipOtn.getNodeMapping(i),
-                    new EndPoint(i, 1, Integer.MAX_VALUE, EndPoint.type.ip, 0));
+            for (int order = 0; order < ip.getPorts()[i]; ++order) {
+                collapsedGraph.addEndPoint(i,
+                        new EndPoint(
+                                ip.getAdjList().size()
+                                        + ipOtn.getNodeMapping(i),
+                                1, ip.getPortCapacity()[i],
+                                EndPoint.type.otn, order));
+                collapsedGraph.addEndPoint(
+                        ip.getAdjList().size() + ipOtn.getNodeMapping(i),
+                        new EndPoint(i, 1, ip.getPortCapacity()[i],
+                                EndPoint.type.ip, order));
+            }
         }
         System.out.println("Collapsed Graph: \n" + collapsedGraph);
     }
@@ -286,7 +292,8 @@ public class CreateInitialSolution {
             ArrayList<Tuple> linkMapping = (ArrayList<Tuple>) pair.getValue();
 
             // Initialize a Path entry for the VLink
-            sol.vnIp.linkMapping.put((Tuple) pair.getKey(), new ArrayList<Tuple>());
+            sol.vnIp.linkMapping.put((Tuple) pair.getKey(),
+                    new ArrayList<Tuple>());
 
             // Initialize Potential Variables that will be used to populate New
             // IP Link Path
@@ -341,7 +348,7 @@ public class CreateInitialSolution {
                             dstIP);
 
                     // Create new Tup for the IP Link
-                    Tuple ipTup = new Tuple(tupleOrder,srcIP, dstIP);
+                    Tuple ipTup = new Tuple(tupleOrder, srcIP, dstIP);
 
                     // Add the path in the IP->OTN Overlay Solution
                     sol.ipOtn.linkMapping.put(ipTup, newIpLinkPath);
