@@ -112,10 +112,12 @@ public class Dijkstra {
         }
         ArrayList<Tuple> path = new ArrayList<Tuple>();
         int step = destination;
+        
         while (predecessors[step] != -1) {
             path.add(new Tuple(0, step,predecessors[step]));
             step = predecessors[step];
         }    
+        
         return path;
     }
 }
