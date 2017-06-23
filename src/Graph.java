@@ -86,19 +86,19 @@ public class Graph {
 
         ArrayList<EndPoint> endPoints = adjList.get(source);
         for (int i = 0; i < endPoints.size(); i++) {
-            if ((endPoints.get(i).getNodeId() == destination) &&
-            	(endPoints.get(i).getOrder()  == order))
+            if ((endPoints.get(i).getNodeId() == destination)
+                    && (endPoints.get(i).getOrder() == order))
                 return endPoints.get(i).getBw();
         }
         return -1;
     }
 
     // Get the Weight of an incident link
-    public int getCost(int source, int destination) {
-
+    public int getCost(int source, int destination, int order) {
         ArrayList<EndPoint> endPoints = adjList.get(source);
         for (int i = 0; i < endPoints.size(); i++) {
-            if (endPoints.get(i).getNodeId() == destination)
+            if (endPoints.get(i).getNodeId() == destination
+                    && endPoints.get(i).getOrder() == order)
                 return endPoints.get(i).getCost();
         }
         return -1;
@@ -188,14 +188,16 @@ public class Graph {
 
     // Print the complete Adjacency List
     public String toString() {
-    	String content = "Adjacency List:\n";
-		for(int i=0;i<adjList.size();i++)
-			content += "- Node "+i+" is attached to: \n"+adjList.get(i).toString()+"\n";
-		
-		for(int i=0;i<ports.length;i++)
-			content+= "Node "+i+" has "+ ports[i]+" ports, each of capacity "+portCapacity[i]+"\n";
-		
-		return content;
+        String content = "Adjacency List:\n";
+        for (int i = 0; i < adjList.size(); i++)
+            content += "- Node " + i + " is attached to: \n"
+                    + adjList.get(i).toString() + "\n";
+
+        for (int i = 0; i < ports.length; i++)
+            content += "Node " + i + " has " + ports[i]
+                    + " ports, each of capacity " + portCapacity[i] + "\n";
+
+        return content;
     }
 
 }
