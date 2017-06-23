@@ -30,7 +30,7 @@ public class Driver {
 			System.out.println("Node "+i+" has "+ip.getPorts()[i]+" ports each of capacity "+ip.getPortCapacity()[i]);
 		
 		//3- Map IP to OTN
-		OverlayMapping ipOtn = ReadOverlayMapping(ip.getAdjList().size(), "./src/DataSet/ip.nmap", "./src/DataSet/ip.emap");
+		OverlayMapping ipOtn = ReadOverlayMapping(ip.getAdjList().size(), "./src/Dataset/ip.nmap", "./src/Dataset/ip.emap");
 		System.out.println("******* IP to OTN Overlay Mapping: ******* \n"+ipOtn);
 		
 		//4- Initialize VN Graph
