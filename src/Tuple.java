@@ -52,7 +52,7 @@ public class Tuple{
 	
 	//Print the tuple
 	public String toString(){
-		return "("+source+","+destination+")";
+		return "("+source+","+destination+","+order+")";
 	}
 	
 	public boolean equals(Tuple t){

@@ -116,13 +116,12 @@ public class Dijkstra {
         }
         ArrayList<Tuple> path = new ArrayList<Tuple>();
         int step = destination;
-
         while (predecessors[step][0] != -1) {
-            path.add(new Tuple(predecessors[step][1], step,
-                    predecessors[step][0]));
+            path.add(new Tuple(predecessors[step][1], predecessors[step][0],
+                    step));
             step = predecessors[step][0];
         }
-
+        Collections.reverse(path);
         return path;
     }
 }

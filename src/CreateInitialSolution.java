@@ -53,8 +53,11 @@ public class CreateInitialSolution {
         int iter = 0;
         do {
             // 1- Get a new list order
-            ArrayList<Integer> listOrder = getListOrder(vn);
-
+            // ArrayList<Integer> listOrder = getListOrder(vn);
+            ArrayList<Integer> listOrder = new ArrayList<Integer>();
+            listOrder.add(1);
+            listOrder.add(0);
+            listOrder.add(2);
             // 2- Execute the function that performs the VN Nodes & Links
             // embedding
             Solutions sol = execute(vn, locationConstraints, listOrder);
@@ -96,9 +99,14 @@ public class CreateInitialSolution {
 
             // Randomly select a node from location constraint set that is not
             // occupied.
-            int sourceLoc = gn.nextInt(locationConstraints[startNode].size());
-            while (sol.vnIp.isOccupied(sourceLoc))
-                sourceLoc = gn.nextInt(locationConstraints[startNode].size());
+            int sourceLocIdx = gn
+                    .nextInt(locationConstraints[startNode].size());
+            int sourceLoc = locationConstraints[startNode].get(sourceLocIdx);
+            while (sol.vnIp.isOccupied(sourceLoc)) {
+                sourceLocIdx = gn
+                        .nextInt(locationConstraints[startNode].size());
+                sourceLoc = locationConstraints[startNode].get(sourceLocIdx);
+            }
             System.out.println("Source Node " + sourceLoc);
 
             // 3- Create Metanodes for source's neighbors
@@ -193,12 +201,15 @@ public class CreateInitialSolution {
                     (vn.getAdjList().get(startNode).size() + 1));
 
             // Could not find sufficient paths; Embedding failed.
-            if (embeddingPaths == null)
+            if (embeddingPaths == null) {
+                System.out.println("Link embedding failed!");
                 return null;
+            }
 
             // EK returned a set of paths only. Figure out the link and node
             // emebdding form the set of paths. Now we need to populate embdSol.
             OverlayMapping embdSol = new OverlayMapping(vn.getNodeCount());
+            embdSol.setNodeMappingSolution(startNode, sourceLoc);
             for (int j = 0; j < adjList.size(); ++j) {
                 EndPoint vendPoint = adjList.get(j);
                 int metanode = vNodeToMetaNodeMap[vendPoint.getNodeId()];
@@ -242,7 +253,7 @@ public class CreateInitialSolution {
                         }
                     }
                     embdSol.setLinkMappingPath(
-                            new Tuple(0, i, vendPoint.getNodeId()),
+                            new Tuple(0, startNode, vendPoint.getNodeId()),
                             embeddingPaths.get(k));
                 }
             }
@@ -430,13 +441,17 @@ public class CreateInitialSolution {
         int[][][] capacity = new int[kNodeCount][kNodeCount][];
         int[][][] flow = new int[kNodeCount][kNodeCount][];
         for (int i = 0; i < collapsedGraph.getNodeCount(); ++i) {
-            for (int j = 0; j < collapsedGraph.getNodeCount(); ++j) {
-                if (collapsedGraph.getPorts()[i] != -1) {
-                    capacity[i][j] = new int[collapsedGraph.getPorts()[i]];
-                    flow[i][j] = new int[collapsedGraph.getPorts()[i]];
+            for (int j = i + 1; j < collapsedGraph.getNodeCount(); ++j) {
+                if (i >= 0 && i < ipNodesSize) {
+                    capacity[i][j] = capacity[j][i] = new int[collapsedGraph
+                            .getPorts()[i]];
+                    flow[i][j] = flow[j][i] = new int[collapsedGraph
+                            .getPorts()[i]];
                 } else {
                     capacity[i][j] = new int[1];
+                    capacity[j][i] = new int[1];
                     flow[i][j] = new int[1];
+                    flow[j][i] = new int[1];
                 }
             }
         }
@@ -462,7 +477,8 @@ public class CreateInitialSolution {
                 EndPoint endPoint = adjList.get(j);
                 if (endPoint.getT() == EndPoint.type.meta) {
                     capacity[i][endPoint.getNodeId()][endPoint.getOrder()] = 1;
-                    capacity[endPoint.getNodeId()][i][endPoint.getOrder()] = 0;
+                    // capacity[endPoint.getNodeId()][i][endPoint.getOrder()] =
+                    // 0;
                 } else {
                     capacity[i][endPoint.getNodeId()][endPoint
                             .getOrder()] = endPoint.getBw() / maxLinkCap;
@@ -470,14 +486,16 @@ public class CreateInitialSolution {
             }
         }
 
-        // Set capacity[u][metanode] = 1,
+        // Set capacity[source][metanode] = N - 1.
         for (int i = 0; i < collapsedGraph.getAdjList().get(source)
                 .size(); ++i) {
             EndPoint endPoint = collapsedGraph.getAdjList().get(source).get(i);
             int v = endPoint.getNodeId();
             int order = endPoint.getOrder();
-            capacity[source][v][order] = N - 1;
-            capacity[v][source][order] = N - 1;
+            capacity[source][v][order] = Math.min(capacity[source][v][order],
+                    N - 1);
+            capacity[v][source][order] = Math.min(capacity[v][source][order],
+                    N - 1);
         }
 
         int maxFlow = 0;
@@ -485,8 +503,9 @@ public class CreateInitialSolution {
             // Find an augmenting path, i.e., a path that can carry some
             // positive flow.
             Dijkstra dijkstraDriver = new Dijkstra(collapsedGraph, capacity);
-            ArrayList<Tuple> path = dijkstraDriver.getPath(source, sink, 0);
-
+            ArrayList<Tuple> path = dijkstraDriver.getPath(source, sink, 1);
+            if (path == null)
+                break;
             // After finding an augmenting path, compute the minimum capacity
             // available along this path. That would be how much flow we are
             // able to push. For our specific problem, this number should be 1.
@@ -506,6 +525,7 @@ public class CreateInitialSolution {
             // Update the residual capacities and flow matrix accordingly.
             for (int i = 0; i < path.size(); ++i) {
                 Tuple link = path.get(i);
+                System.out.print(link.toString());
                 capacity[link.getSource()][link.getDestination()][link
                         .getOrder()] -= minCap;
                 capacity[link.getDestination()][link.getSource()][link
@@ -529,8 +549,11 @@ public class CreateInitialSolution {
 
         // If maximum flow is less than the number of links to be embedded this
         // means that embedding has failed.
-        if (maxFlow < N - 1)
+        if (maxFlow < N - 1) {
+            System.out.println("Cannot find sufficient paths between " + source
+                    + " and " + sink);
             return null;
+        }
 
         // Construct flow paths from augmenting paths. The algorithm is as
         // follows: If augmenting path a and b contains links (u, v) and (v, u),
