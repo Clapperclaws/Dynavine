@@ -53,16 +53,17 @@ public class CreateInitialSolution {
         int iter = 0;
         do {
             // 1- Get a new list order
-            // ArrayList<Integer> listOrder = getListOrder(vn);
-            ArrayList<Integer> listOrder = new ArrayList<Integer>();
+            ArrayList<Integer> listOrder = getListOrder(vn);
+            /* ArrayList<Integer> listOrder = new ArrayList<Integer>();
             listOrder.add(1);
             listOrder.add(0);
-            listOrder.add(2);
+            listOrder.add(2);*/
             // 2- Execute the function that performs the VN Nodes & Links
             // embedding
             Solutions sol = execute(vn, locationConstraints, listOrder);
             if (sol != null)
-                listSol.add(sol);
+                return sol;
+            // listSol.add(sol);
             iter++;
         } while (iter < k);
 
