@@ -80,21 +80,117 @@ public class Driver {
         }
 
         // 6- Get Initial Solution
+        long startTime = System.nanoTime();
         CreateInitialSolution cis = new CreateInitialSolution(ip, otn, ipOtn);
         Solutions solution = cis.getInitialSolution(vn, locationConstraints, 1);
-        WriteSolutionToFile(solution, vn, parsedArgs.get("--vn_topology_file"));
+        long elapsedTime = System.nanoTime() - startTime;
+
+        // Write solution status to file.
+        String filePrefix = parsedArgs.get("--vn_topology_file");
+        FileWriter fw = new FileWriter(filePrefix + ".status");
+        BufferedWriter bw = new BufferedWriter(fw);
+        if (solution == null) {
+            bw.write("Success\n");
+        } else {
+            bw.write("Failure\n");
+        }
+        bw.close();
+        fw.close();
+
+        // Write Solution time to file.
+        fw = new FileWriter(filePrefix + ".time");
+        bw = new BufferedWriter(fw);
+        bw.write(Long.toString(elapsedTime / 1000000000) + "."
+                + Long.toString(elapsedTime % 1000000000) + "\n");
+        bw.close();
+        fw.close();
+
+        WriteSolutionToFile(solution, vn, ip, filePrefix);
+        WriteSolutionCostToFile(solution, vn, ip, otn, filePrefix);
+    }
+
+    private static void WriteSolutionCostToFile(Solutions solution, Graph vn,
+            Graph ip, Graph otn, String filePrefix) throws IOException {
+        long cost = 0;
+        // First add the cost of vlinks.
+        OverlayMapping vnIp = solution.getVnIp();
+        for (Tuple vlink : vnIp.linkMapping.keySet()) {
+            ArrayList<Tuple> ipPath = vnIp.getLinkMapping(vlink);
+            long bw = vn.getBW(vlink.getSource(), vlink.getDestination(),
+                    vlink.getOrder());
+            for (Tuple link : ipPath) {
+                cost += (bw * ip.getCost(link.getSource(),
+                        link.getDestination(), link.getOrder()));
+            }
+        }
+
+        // Add the cost of new IP links.
+        int offset = ip.getNodeCount();
+        OverlayMapping ipOtn = solution.getIpOtn();
+        for (Tuple ipLink : ipOtn.linkMapping.keySet()) {
+            ArrayList<Tuple> otnPath = ipOtn.getLinkMapping(ipLink);
+            long bw = Math.min(ip.getPortCapacity()[ipLink.getSource()],
+                    ip.getPortCapacity()[ipLink.getDestination()]);
+            for (Tuple link : otnPath) {
+                cost += (bw * otn.getCost(link.getSource() - offset,
+                        link.getDestination() - offset, link.getOrder()));
+            }
+        }
+
+        FileWriter fw = new FileWriter(filePrefix + ".cost");
+        BufferedWriter bw = new BufferedWriter(fw);
+        bw.write(Long.toString(cost) + "\n");
+        bw.close();
+        fw.close();
     }
 
     private static void WriteSolutionToFile(Solutions solution, Graph vn,
-            String filePrefix) throws IOException {
-        if (solution == null) System.out.println("Fake");
+            Graph ip, String filePrefix) throws IOException {
         OverlayMapping vnIp = solution.getVnIp();
+        // Write vnode mapping to file.
         FileWriter fw = new FileWriter(filePrefix + ".nmap");
         BufferedWriter bw = new BufferedWriter(fw);
         for (int i = 0; i < vn.getNodeCount(); ++i) {
             bw.write(Integer.toString(i) + ","
                     + Integer.toString(vnIp.getNodeMapping(i)) + "\n");
         }
+        bw.close();
+        fw.close();
+
+        // Write vlink mapping to file.
+        fw = new FileWriter(filePrefix + ".emap");
+        bw = new BufferedWriter(fw);
+        for (Tuple vlink : vnIp.linkMapping.keySet()) {
+            ArrayList<Tuple> ipPath = vnIp.getLinkMapping(vlink);
+            for (Tuple link : ipPath) {
+                bw.write(Integer.toString(vlink.getSource()) + ","
+                        + Integer.toString(vlink.getDestination()) + ","
+                        + Integer.toString(link.getSource()) + ","
+                        + Integer.toString(link.getDestination()) + ","
+                        + Integer.toString(link.getOrder()) + "\n");
+            }
+        }
+        bw.close();
+        fw.close();
+
+        // Write new IP links to file.
+        int offset = ip.getNodeCount();
+        fw = new FileWriter(filePrefix + ".new_ip");
+        bw = new BufferedWriter(fw);
+        OverlayMapping ipOtn = solution.getIpOtn();
+        for (Tuple ipLink : ipOtn.linkMapping.keySet()) {
+            ArrayList<Tuple> otnPath = ipOtn.getLinkMapping(ipLink);
+            for (Tuple link : otnPath) {
+                bw.write(Integer.toString(ipLink.getSource()) + ","
+                        + Integer.toString(ipLink.getDestination()) + ","
+                        + Integer.toString(ipLink.getOrder()) + ","
+                        + Integer.toString(link.getSource() - offset) + ","
+                        + Integer.toString(link.getDestination() - offset)
+                        + "\n");
+            }
+        }
+        bw.close();
+        fw.close();
     }
 
     public static String ReadFromFile(String filename) throws IOException {
