@@ -82,11 +82,12 @@ public class Graph {
     }
 
     // Get the bandwidth of an incident link
-    public int getBW(int source, int destination) {
+    public int getBW(int source, int destination, int order) {
 
         ArrayList<EndPoint> endPoints = adjList.get(source);
         for (int i = 0; i < endPoints.size(); i++) {
-            if (endPoints.get(i).getNodeId() == destination)
+            if ((endPoints.get(i).getNodeId() == destination) &&
+            	(endPoints.get(i).getOrder()  == order))
                 return endPoints.get(i).getBw();
         }
         return -1;

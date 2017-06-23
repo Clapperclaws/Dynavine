@@ -44,6 +44,19 @@ public class Solutions {
 		this.newIpLinks = newIpLinks;
 	}
 	
+	public int isIPLinkCreated(int source, int destination){
+		for(int i=0;i<newIpLinks.size();i++){
+			if(newIpLinks.get(i).getSource() == source && 
+			   newIpLinks.get(i).getDestination() == destination)
+				return i;
+			
+			if(newIpLinks.get(i).getDestination() == source && 
+			   newIpLinks.get(i).getSource() == destination)	
+				return i;
+		}
+		return -1;
+	}
+	
 	public String toString(){
 		String content = "**** VN -> IP **** \n";
 		content += vnIp+"\n";

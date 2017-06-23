@@ -1,6 +1,6 @@
 
 /* Tuple represents a link; i.e., the index of the source node and destination node of a link*/
-public class Tuple{
+public class Tuple {
 	
 	private int order;
 	private int source; // Index of the link's source node
@@ -63,4 +63,5 @@ public class Tuple{
 	
 		return false;
 	}
+
 }
