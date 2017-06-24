@@ -1,3 +1,6 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,7 +18,6 @@ public class CreateInitialSolution {
     OverlayMapping ipOtn;
 
     public CreateInitialSolution(Graph ip, Graph otn, OverlayMapping ipOtn) {
-
         ipNodesSize = ip.getAdjList().size();
         otnNodesSize = otn.getAdjList().size();
         this.ipOtn = ipOtn;
@@ -51,19 +53,33 @@ public class CreateInitialSolution {
         ArrayList<Solutions> listSol = new ArrayList<Solutions>();
 
         int iter = 0;
+        Solutions bestSolution = null;
+        long bestCost = Integer.MAX_VALUE;
         do {
             // 1- Get a new list order
             ArrayList<Integer> listOrder = getListOrder(vn);
-            /* ArrayList<Integer> listOrder = new ArrayList<Integer>();
-            listOrder.add(1);
-            listOrder.add(0);
-            listOrder.add(2);*/
+            /*
+             * ArrayList<Integer> listOrder = new ArrayList<Integer>();
+             * listOrder.add(1); listOrder.add(0); listOrder.add(2);
+             */
             // 2- Execute the function that performs the VN Nodes & Links
             // embedding
             Solutions sol = execute(vn, locationConstraints, listOrder);
-            if (sol != null)
-                return sol;
-            // listSol.add(sol);
+            if (sol != null) {
+                long cost = GetSolutionCost(sol, vn);
+                System.out.println("Iter = " + Integer.toString(iter)
+                        + ": Current cost = " + Long.toString(cost) + "\n");
+                if (cost < bestCost) {
+                    bestCost = cost;
+                    bestSolution = sol;
+                }
+                System.out.println("Iter = " + Integer.toString(iter)
+                        + ": Current best cost = " + Long.toString(bestCost)
+                        + "\n");
+            } else {
+                System.out.println("Iter = " + Integer.toString(iter)
+                        + ": no success!!\n");
+            }
             iter++;
         } while (iter < k);
 
@@ -71,8 +87,38 @@ public class CreateInitialSolution {
         // return execute(vn, locationConstraints, listOrder);
         // 4- Return lowest cost solution
         // return sol;
+        System.out.println(
+                "Best solution cost = " + Long.toString(bestCost) + "\n");
+        return bestSolution;
+    }
 
-        return null;
+    private long GetSolutionCost(Solutions solution, Graph vn) {
+        long cost = 0;
+        // First add the cost of vlinks.
+        OverlayMapping vnIp = solution.getVnIp();
+        for (Tuple vlink : vnIp.linkMapping.keySet()) {
+            ArrayList<Tuple> ipPath = vnIp.getLinkMapping(vlink);
+            long bw = vn.getBW(vlink.getSource(), vlink.getDestination(),
+                    vlink.getOrder());
+            for (Tuple link : ipPath) {
+                cost += (bw * collapsedGraph.getCost(link.getSource(),
+                        link.getDestination(), link.getOrder()));
+            }
+        }
+
+        // Add the cost of new IP links.
+        OverlayMapping ipOtn = solution.getIpOtn();
+        for (Tuple ipLink : ipOtn.linkMapping.keySet()) {
+            ArrayList<Tuple> otnPath = ipOtn.getLinkMapping(ipLink);
+            long bw = Math.min(
+                    collapsedGraph.getPortCapacity()[ipLink.getSource()],
+                    collapsedGraph.getPortCapacity()[ipLink.getDestination()]);
+            for (Tuple link : otnPath) {
+                cost += (bw * collapsedGraph.getCost(link.getSource(),
+                        link.getDestination(), link.getOrder()));
+            }
+        }
+        return cost;
     }
 
     public Solutions execute(Graph vn, ArrayList<Integer>[] locationConstraints,
@@ -304,10 +350,10 @@ public class CreateInitialSolution {
 
             int vLinkDestIndex = vn.getNodeIndex(vLink.getSource(),
                     vLink.getDestination(), vLink.getOrder());
-            //Get BW Demand
+            // Get BW Demand
             int bw = vn.getAdjList().get(vLink.getSource()).get(vLinkDestIndex)
                     .getBw();
-            
+
             // Initialize Potential Variables that will be used to populate New
             // IP Link Path
             ArrayList<Tuple> newIpLinkPath = new ArrayList<Tuple>();
@@ -317,7 +363,7 @@ public class CreateInitialSolution {
                 // Examine Link
                 int src = linkMapping.get(i).getSource();
                 int dst = linkMapping.get(i).getDestination();
-             
+
                 // Case of IP -> IP
                 if ((src >= 0 && src < ipNodesSize)
                         && (dst >= 0 && dst < ipNodesSize)) {
@@ -354,59 +400,61 @@ public class CreateInitialSolution {
                     // Add the OTN src as the Node embedding of the IP dst.
                     sol.ipOtn.nodeMapping[dst] = src;
                     dstIP = dst;
-                    
-                    //Check if this link has already been created
-                    int index = sol.isIPLinkCreated(srcIP, dstIP);
-                    if(index != -1){
-                    	//Check if the link has enough capacity
-                    	if(collapsedGraph.getBW(srcIP, dstIP, 
-                    			sol.getNewIpLinks().get(index).getOrder()) >= bw)
-                		// Add the IP Link in the VN->IP Overlay Solution
-                        sol.vnIp.linkMapping.get((Tuple) pair.getKey()).add(sol.getNewIpLinks().get(index));                   	
-                    }
-                    else{
 
-	                    // Find the order of the new IP Link
-	                    int tupleOrder = collapsedGraph.findTupleOrder(srcIP,
-	                            dstIP);
-	
-	                    // Create new Tuple for the IP Link
-	                    Tuple ipTup = new Tuple(tupleOrder, srcIP, dstIP);
-	
-	                    // Add the path in the IP->OTN Overlay Solution
-	                    sol.ipOtn.linkMapping.put(ipTup, newIpLinkPath);
-	
-	                    // Add the IP Link in the VN->IP Overlay Solution
-	                    sol.vnIp.linkMapping.get((Tuple) pair.getKey()).add(ipTup);
-	
-	                    // Get Bandwidth Capacity of new IP Link
-	                    int newIPLinkCap = Math.min(
-	                            collapsedGraph.getPortCapacity()[srcIP],
-	                            collapsedGraph.getPortCapacity()[dstIP]);
-	
-	                    // Add ipSrc as neighbor of ipDst
-	                    collapsedGraph.addEndPoint(srcIP, new EndPoint(dstIP, 1,
-	                            newIPLinkCap, EndPoint.type.ip, tupleOrder));
-	
-	                    // Add ipDst as neighbor of ipSrc
-	                    collapsedGraph.addEndPoint(dstIP, new EndPoint(srcIP, 1,
-	                            newIPLinkCap, EndPoint.type.ip, tupleOrder));
-	    
-	                    // Add IP Link to the list of new IP Links
-	                    sol.newIpLinks.add(ipTup);
-	
-	                    // Update IP Ports
-	                    collapsedGraph.setPort(srcIP,
-	                            collapsedGraph.getPorts()[srcIP] - 1);
-	                    collapsedGraph.setPort(dstIP,
-	                            collapsedGraph.getPorts()[dstIP] - 1);
-	
-	                    // Update OTN Links Capacity
-	                    updateResidualCapacity(ipTup, newIpLinkPath, newIPLinkCap);
-	                }
+                    // Check if this link has already been created
+                    int index = sol.isIPLinkCreated(srcIP, dstIP);
+                    if (index != -1) {
+                        // Check if the link has enough capacity
+                        if (collapsedGraph.getBW(srcIP, dstIP, sol
+                                .getNewIpLinks().get(index).getOrder()) >= bw)
+                            // Add the IP Link in the VN->IP Overlay Solution
+                            sol.vnIp.linkMapping.get((Tuple) pair.getKey())
+                                    .add(sol.getNewIpLinks().get(index));
+                    } else {
+
+                        // Find the order of the new IP Link
+                        int tupleOrder = collapsedGraph.findTupleOrder(srcIP,
+                                dstIP);
+
+                        // Create new Tuple for the IP Link
+                        Tuple ipTup = new Tuple(tupleOrder, srcIP, dstIP);
+
+                        // Add the path in the IP->OTN Overlay Solution
+                        sol.ipOtn.linkMapping.put(ipTup, newIpLinkPath);
+
+                        // Add the IP Link in the VN->IP Overlay Solution
+                        sol.vnIp.linkMapping.get((Tuple) pair.getKey())
+                                .add(ipTup);
+
+                        // Get Bandwidth Capacity of new IP Link
+                        int newIPLinkCap = Math.min(
+                                collapsedGraph.getPortCapacity()[srcIP],
+                                collapsedGraph.getPortCapacity()[dstIP]);
+
+                        // Add ipSrc as neighbor of ipDst
+                        collapsedGraph.addEndPoint(srcIP, new EndPoint(dstIP, 1,
+                                newIPLinkCap, EndPoint.type.ip, tupleOrder));
+
+                        // Add ipDst as neighbor of ipSrc
+                        collapsedGraph.addEndPoint(dstIP, new EndPoint(srcIP, 1,
+                                newIPLinkCap, EndPoint.type.ip, tupleOrder));
+
+                        // Add IP Link to the list of new IP Links
+                        sol.newIpLinks.add(ipTup);
+
+                        // Update IP Ports
+                        collapsedGraph.setPort(srcIP,
+                                collapsedGraph.getPorts()[srcIP] - 1);
+                        collapsedGraph.setPort(dstIP,
+                                collapsedGraph.getPorts()[dstIP] - 1);
+
+                        // Update OTN Links Capacity
+                        updateResidualCapacity(ipTup, newIpLinkPath,
+                                newIPLinkCap);
+                    }
                 }
             }
-            
+
             updateResidualCapacity(vLink, sol.vnIp.linkMapping.get(vLink), bw);
         }
     }
