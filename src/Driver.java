@@ -82,7 +82,8 @@ public class Driver {
         // 6- Get Initial Solution
         long startTime = System.nanoTime();
         CreateInitialSolution cis = new CreateInitialSolution(ip, otn, ipOtn);
-        Solutions solution = cis.getInitialSolution(vn, locationConstraints, 1);
+        Solutions solution = cis.getInitialSolution(vn, locationConstraints, 
+                vn.getNodeCount());
         long elapsedTime = System.nanoTime() - startTime;
 
         // Write solution status to file.
