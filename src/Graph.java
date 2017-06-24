@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 
 /*Generic Graph that will be used to represent virtual, IP, and OTN graphs*/
 public class Graph {
@@ -65,6 +66,8 @@ public class Graph {
 
     // Add a single end point to the list of end points for a given node.
     public void addEndPoint(int nodeId, EndPoint endPnt) {
+        if ((nodeId == 0 || nodeId == 4) && (endPnt.getNodeId() == 0 || endPnt.getNodeId() == 4))
+            System.out.println("Gotcha!!");
         adjList.get(nodeId).add(endPnt);
     }
 
@@ -184,6 +187,19 @@ public class Graph {
                 order++;
         }
         return order;
+    }
+    
+    // Removes a link from the graph.
+    public boolean removeLink(int src, int dst, int order) {
+        Iterator<EndPoint> it = adjList.get(src).iterator();
+        while(it.hasNext()) {
+            EndPoint ep = it.next();
+            if (ep.getNodeId() == dst && ep.getOrder() == order) {
+                it.remove();
+                return true;
+            }
+        }
+        return false;
     }
 
     // Print the complete Adjacency List

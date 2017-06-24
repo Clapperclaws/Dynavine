@@ -50,14 +50,14 @@ public class CreateInitialSolution {
             ArrayList<Integer>[] locationConstraints, int k) {
         // 1- Initialize the list of solutions that will store the solution
         // generated at the end of every run
-        ArrayList<Solutions> listSol = new ArrayList<Solutions>();
-
         int iter = 0;
         Solutions bestSolution = null;
         long bestCost = Integer.MAX_VALUE;
         do {
             // 1- Get a new list order
             ArrayList<Integer> listOrder = getListOrder(vn);
+            listOrder.clear();
+            listOrder.add(0); listOrder.add(2); listOrder.add(1);
             /*
              * ArrayList<Integer> listOrder = new ArrayList<Integer>();
              * listOrder.add(1); listOrder.add(0); listOrder.add(2);
@@ -65,7 +65,7 @@ public class CreateInitialSolution {
             // 2- Execute the function that performs the VN Nodes & Links
             // embedding
             Solutions sol = execute(vn, locationConstraints, listOrder);
-            if (sol != null) {
+            if (sol.isSuccessful()) {
                 long cost = GetSolutionCost(sol, vn);
                 System.out.println("Iter = " + Integer.toString(iter)
                         + ": Current cost = " + Long.toString(cost) + "\n");
@@ -80,7 +80,8 @@ public class CreateInitialSolution {
                 System.out.println("Iter = " + Integer.toString(iter)
                         + ": no success!!\n");
             }
-            iter++;
+            resetCollapsedGraph(sol);
+            ++iter;
         } while (iter < k);
 
         // 3- Find the solution with the lowest cost
@@ -215,12 +216,14 @@ public class CreateInitialSolution {
             metaNodes.add(counter);
             counter++;
 
-            // 5- Find IP Nodes that are connected to more than one Meta Node
+            // 5- Find IP Nodes that are connected to more than one Meta
+            // Node
             for (int k = 0; k < ipNodesSize; k++) {
                 ArrayList<EndPoint> adjMetaNodes = collapsedGraph
                         .getAdjNodesByType(k, EndPoint.type.meta);
                 if (adjMetaNodes.size() > 1) {
-                    // Remove Meta Nodes from the Adjacency List of this node
+                    // Remove Meta Nodes from the Adjacency List of this
+                    // node
                     collapsedGraph.getAllEndPoints(k).removeAll(adjMetaNodes);
 
                     // Create an Adjacency vector for a new meta-node
@@ -240,8 +243,8 @@ public class CreateInitialSolution {
                     counter++;
                 }
             }
-            System.out.println(
-                    "Collapsed Graph with Meta Nodes \n" + collapsedGraph);
+            //System.out.println(
+            //       "Collapsed Graph with Meta Nodes \n" + collapsedGraph);
 
             // 4- Call EK
             ArrayList<ArrayList<Tuple>> embeddingPaths = MaxFlow(collapsedGraph,
@@ -251,11 +254,12 @@ public class CreateInitialSolution {
             // Could not find sufficient paths; Embedding failed.
             if (embeddingPaths == null) {
                 System.out.println("Link embedding failed!");
-                return null;
+                return sol;
             }
 
             // EK returned a set of paths only. Figure out the link and node
-            // emebdding form the set of paths. Now we need to populate embdSol.
+            // emebdding form the set of paths. Now we need to populate
+            // embdSol.
             OverlayMapping embdSol = new OverlayMapping(vn.getNodeCount());
             embdSol.setNodeMappingSolution(startNode, sourceLoc);
             for (int j = 0; j < adjList.size(); ++j) {
@@ -320,12 +324,17 @@ public class CreateInitialSolution {
                     .subList((ipNodesSize + otnNodesSize),
                             collapsedGraph.getNodeCount());
             collapsedGraph.getAdjList().removeAll(subList);
-            System.out.println("Collapsed Graph after removal of MetaNodes:\n"
-                    + collapsedGraph);
+            //System.out.println("Collapsed Graph after removal of MetaNodes:\n"
+            //        + collapsedGraph);
             if (settledNodes.size() == vn.getAdjList().size())
                 break;
         }
         System.out.println("Solution :" + sol);
+        for (int i = 0; i < vn.getNodeCount(); ++i) {
+            if (sol.vnIp.getNodeMapping(i) == -1)
+                return null;
+        }
+        sol.setSuccessful(true);
         return sol;
     }
 
@@ -455,8 +464,35 @@ public class CreateInitialSolution {
                     }
                 }
             }
-
             updateResidualCapacity(vLink, sol.vnIp.linkMapping.get(vLink), bw);
+        }
+    }
+
+    void resetCollapsedGraph(Solutions sol) {
+        ArrayList<Tuple> newIps = sol.getNewIpLinks();
+        for (int i = 0; i < newIps.size(); ++i) {           
+            Tuple link = newIps.get(i);
+            System.out.println("Removing IP link (" + link.getSource() + 
+                    ", " + link.getDestination() + "," + link.getOrder() + ")");
+            int bw = collapsedGraph.getBW(link.getSource(),
+                    link.getDestination(), link.getOrder());
+            
+            // Remove the new IP links from collapsedGraph.
+            boolean ret = collapsedGraph.removeLink(link.getSource(), link.getDestination(),
+                    link.getOrder());
+            System.out.println(ret);
+            ret = collapsedGraph.removeLink(link.getDestination(), link.getSource(),
+                    link.getOrder());
+            System.out.println(ret);
+            // Adjust port count of the IP nodes.
+            collapsedGraph.setPort(link.getSource(),
+                    collapsedGraph.getPorts()[link.getSource()] + 1);
+            collapsedGraph.setPort(link.getDestination(),
+                    collapsedGraph.getPorts()[link.getDestination()] + 1);
+
+            // Restore bandwidth on the mapped OTN path.
+            ArrayList<Tuple> otnPath = sol.ipOtn.getLinkMapping(link);
+            updateResidualCapacity(link, otnPath, -bw);            
         }
     }
 
@@ -540,6 +576,7 @@ public class CreateInitialSolution {
             ArrayList<EndPoint> adjList = collapsedGraph.getAdjList().get(i);
             for (int j = 0; j < adjList.size(); ++j) {
                 EndPoint endPoint = adjList.get(j);
+                if (endPoint == null) System.out.println("Endpoint null :O!!");
                 if (endPoint.getT() == EndPoint.type.meta) {
                     capacity[i][endPoint.getNodeId()][endPoint.getOrder()] = 1;
                     // capacity[endPoint.getNodeId()][i][endPoint.getOrder()] =

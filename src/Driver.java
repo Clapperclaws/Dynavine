@@ -83,7 +83,7 @@ public class Driver {
         long startTime = System.nanoTime();
         CreateInitialSolution cis = new CreateInitialSolution(ip, otn, ipOtn);
         Solutions solution = cis.getInitialSolution(vn, locationConstraints,
-                vn.getNodeCount());
+                vn.getNodeCount() * 2);
         long elapsedTime = System.nanoTime() - startTime;
 
         // Write solution status to file.
@@ -92,12 +92,13 @@ public class Driver {
         BufferedWriter bw = new BufferedWriter(fw);
         if (solution != null) {
             bw.write("Success\n");
+            WriteSolutionToFile(solution, vn, ip, filePrefix);
+            WriteSolutionCostToFile(solution, vn, ip, otn, filePrefix);
         } else {
             bw.write("Failure\n");
         }
         bw.close();
         fw.close();
-
         // Write Solution time to file.
         fw = new FileWriter(filePrefix + ".time");
         bw = new BufferedWriter(fw);
@@ -105,9 +106,6 @@ public class Driver {
                 + Long.toString(elapsedTime % 1000000000) + "\n");
         bw.close();
         fw.close();
-
-        WriteSolutionToFile(solution, vn, ip, filePrefix);
-        WriteSolutionCostToFile(solution, vn, ip, otn, filePrefix);
     }
 
     private static void WriteSolutionCostToFile(Solutions solution, Graph vn,
@@ -223,7 +221,6 @@ public class Driver {
             throws IOException {
         String content = ReadFromFile(filename);
         Scanner scanner = new Scanner(content);
-
         while (scanner.hasNextLine()) {
             String[] line = scanner.nextLine().split(",");
             ip.getPorts()[Integer.parseInt(line[0])] = Integer
