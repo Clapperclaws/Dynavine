@@ -82,7 +82,7 @@ public class Driver {
         // 6- Get Initial Solution
         long startTime = System.nanoTime();
         CreateInitialSolution cis = new CreateInitialSolution(ip, otn, ipOtn);
-        Solutions solution = cis.getInitialSolution(vn, locationConstraints, 
+        Solutions solution = cis.getInitialSolution(vn, locationConstraints,
                 vn.getNodeCount());
         long elapsedTime = System.nanoTime() - startTime;
 
@@ -90,7 +90,7 @@ public class Driver {
         String filePrefix = parsedArgs.get("--vn_topology_file");
         FileWriter fw = new FileWriter(filePrefix + ".status");
         BufferedWriter bw = new BufferedWriter(fw);
-        if (solution == null) {
+        if (solution != null) {
             bw.write("Success\n");
         } else {
             bw.write("Failure\n");
@@ -120,8 +120,12 @@ public class Driver {
             long bw = vn.getBW(vlink.getSource(), vlink.getDestination(),
                     vlink.getOrder());
             for (Tuple link : ipPath) {
-                cost += (bw * ip.getCost(link.getSource(),
-                        link.getDestination(), link.getOrder()));
+                int linkCost = ip.getCost(link.getSource(),
+                        link.getDestination(), link.getOrder());
+                if (linkCost == -1) linkCost = 1;
+                System.out.println("VL bw = " + bw + "; IP Link Cost = "
+                        + linkCost + "\n");
+                cost += (bw * linkCost);
             }
         }
 
@@ -133,8 +137,11 @@ public class Driver {
             long bw = Math.min(ip.getPortCapacity()[ipLink.getSource()],
                     ip.getPortCapacity()[ipLink.getDestination()]);
             for (Tuple link : otnPath) {
-                cost += (bw * otn.getCost(link.getSource() - offset,
-                        link.getDestination() - offset, link.getOrder()));
+                int linkCost = otn.getCost(link.getSource() - offset,
+                        link.getDestination() - offset, link.getOrder());
+                System.out.println("IP bw = " + bw + "; OTN Link Cost = "
+                        + linkCost + "\n");
+                cost += (bw * linkCost);
             }
         }
 
