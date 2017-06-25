@@ -13,6 +13,7 @@ import java.util.Random;
 public class CreateInitialSolution {
 
     Graph collapsedGraph;
+    Graph rootCollapsedGraph;
     int ipNodesSize = 0;
     int otnNodesSize = 0;
     OverlayMapping ipOtn;
@@ -23,16 +24,16 @@ public class CreateInitialSolution {
         this.ipOtn = ipOtn;
 
         // Create Collapsed Graph
-        collapsedGraph = new Graph(ip, otn);
+        rootCollapsedGraph = new Graph(ip, otn);
         // Create new IP Links that connects the IP node to the OTN node. For
         // each free port in the IP node create a link with the OTN node. Set
         // the capacity of the link to the capacity of the port and cost to 1.
         for (int i = 0; i < ip.getAdjList().size(); i++) {
             for (int order = 0; order < ip.getPorts()[i]; ++order) {
-                collapsedGraph.addEndPoint(i, new EndPoint(
+            	rootCollapsedGraph.addEndPoint(i, new EndPoint(
                         ip.getAdjList().size() + ipOtn.getNodeMapping(i), 1,
                         ip.getPortCapacity()[i], EndPoint.type.otn, order));
-                collapsedGraph.addEndPoint(
+            	rootCollapsedGraph.addEndPoint(
                         ip.getAdjList().size() + ipOtn.getNodeMapping(i),
                         new EndPoint(i, 1, ip.getPortCapacity()[i],
                                 EndPoint.type.ip, order));
@@ -54,12 +55,13 @@ public class CreateInitialSolution {
         Solutions bestSolution = null;
         long bestCost = Integer.MAX_VALUE;
         do {
-            // 1- Get a new list order
+        	 
+        	// 1- Get a new list order
             ArrayList<Integer> listOrder = getListOrder(vn);
-            /*
-             * ArrayList<Integer> listOrder = new ArrayList<Integer>();
-             * listOrder.add(1); listOrder.add(0); listOrder.add(2);
-             */
+
+            //Create a copy of the collapsed graph - Reset the graph
+            collapsedGraph = new Graph(rootCollapsedGraph);
+            
             // 2- Execute the function that performs the VN Nodes & Links
             // embedding
             Solutions sol = execute(vn, locationConstraints, listOrder);
@@ -331,6 +333,8 @@ public class CreateInitialSolution {
             	if(sol.getVnIp().getNodeMapping(adjList.get(j).getNodeId()) != -1){
             		settledNodes.add(adjList.get(j).getNodeId());
             	}
+            	else
+            		return sol;
             }
 
 
