@@ -31,10 +31,10 @@ public class CreateInitialSolution {
         // the capacity of the link to the capacity of the port and cost to 1.
         for (int i = 0; i < ip.getAdjList().size(); i++) {
             for (int order = 0; order < ip.getPorts()[i]; ++order) {
-            	rootCollapsedGraph.addEndPoint(i, new EndPoint(
+                rootCollapsedGraph.addEndPoint(i, new EndPoint(
                         ip.getAdjList().size() + ipOtn.getNodeMapping(i), 1,
                         ip.getPortCapacity()[i], EndPoint.type.otn, order));
-            	rootCollapsedGraph.addEndPoint(
+                rootCollapsedGraph.addEndPoint(
                         ip.getAdjList().size() + ipOtn.getNodeMapping(i),
                         new EndPoint(i, 1, ip.getPortCapacity()[i],
                                 EndPoint.type.ip, order));
@@ -56,13 +56,13 @@ public class CreateInitialSolution {
         Solutions bestSolution = null;
         long bestCost = Integer.MAX_VALUE;
         do {
-        	 
-        	// 1- Get a new list order
+
+            // 1- Get a new list order
             ArrayList<Integer> listOrder = getListOrder(vn);
 
-            //Create a copy of the collapsed graph - Reset the graph
+            // Create a copy of the collapsed graph - Reset the graph
             collapsedGraph = new Graph(rootCollapsedGraph);
-            
+
             // 2- Execute the function that performs the VN Nodes & Links
             // embedding
             Solutions sol = execute(vn, locationConstraints, listOrder);
@@ -164,12 +164,15 @@ public class CreateInitialSolution {
             int[] vNodeToMetaNodeMap = new int[vn.getNodeCount()];
             Arrays.fill(vNodeToMetaNodeMap, -1);
             int maxLinkCap = 0;
+            ArrayList<Tuple> vLinksToEmbed = new ArrayList<Tuple>();
             ArrayList<EndPoint> adjList = vn.getAdjList().get(startNode);
             for (int j = 0; j < adjList.size(); j++) {
                 EndPoint vendPoint = adjList.get(j);
                 if (sol.ipOtn.isNodeSettled(vendPoint.getNodeId(),
                         vn.getAdjList().get(vendPoint.getNodeId()).size()))
                     continue;
+                vLinksToEmbed.add(new Tuple(vendPoint.getOrder(), startNode,
+                        vendPoint.getNodeId()));
                 // Add to list of Meta Nodes
                 metaNodes.add(counter);
                 vNodeToMetaNodeMap[vendPoint.getNodeId()] = counter;
@@ -262,8 +265,7 @@ public class CreateInitialSolution {
 
             // 4- Call EK
             ArrayList<ArrayList<Tuple>> embeddingPaths = MaxFlow(collapsedGraph,
-                    sourceLoc, sink, maxLinkCap,
-                    (vn.getAdjList().get(startNode).size() + 1));
+                    sourceLoc, sink, maxLinkCap, vLinksToEmbed.size());
 
             // Could not find sufficient paths; Embedding failed.
             if (embeddingPaths == null) {
@@ -272,7 +274,7 @@ public class CreateInitialSolution {
                 return sol;
             }
 
-            if (embeddingPaths.size() < adjList.size()) {
+            if (embeddingPaths.size() < vLinksToEmbed.size()) {
                 System.out.println(
                         "Insufficient number of paths to embed all adjacent virtual links.");
                 cleanAllMetaNodeLink();
@@ -284,9 +286,9 @@ public class CreateInitialSolution {
             // embdSol.
             OverlayMapping embdSol = new OverlayMapping(vn.getNodeCount());
             embdSol.setNodeMappingSolution(startNode, sourceLoc);
-            for (int j = 0; j < adjList.size(); ++j) {
-                EndPoint vendPoint = adjList.get(j);
-                int metanode = vNodeToMetaNodeMap[vendPoint.getNodeId()];
+            for (int j = 0; j < vLinksToEmbed.size(); ++j) {
+                Tuple vLink = vLinksToEmbed.get(j);
+                int metanode = vNodeToMetaNodeMap[vLink.getDestination()];
                 if (metanode == -1)
                     continue;
 
@@ -312,45 +314,45 @@ public class CreateInitialSolution {
                         Tuple link = it.next();
                         if (metaNodes.contains(link.getSource())
                                 || metaNodes.contains(link.getDestination())) {
-                            if (locationConstraints[vendPoint.getNodeId()]
+                            if (locationConstraints[vLink.getDestination()]
                                     .contains(link.getSource())) {
                                 embdSol.setNodeMappingSolution(
-                                        vendPoint.getNodeId(),
+                                        vLink.getDestination(),
                                         link.getSource());
-                            } else if (locationConstraints[vendPoint
-                                    .getNodeId()]
+                            } else if (locationConstraints[vLink.getDestination()]
                                             .contains(link.getDestination())) {
                                 embdSol.setNodeMappingSolution(
-                                        vendPoint.getNodeId(),
+                                        vLink.getDestination(),
                                         link.getDestination());
                             }
                             it.remove();
                         }
                     }
                     embdSol.setLinkMappingPath(
-                            new Tuple(0, startNode, vendPoint.getNodeId()),
-                            embeddingPaths.get(k));
+                            vLink, embeddingPaths.get(k));
                 }
             }
             aggregateSolution(vn, embdSol, sol);
-//<<<<<<< HEAD
-            
-         // Add embedded nodes to the list of settled nodes
-         //   for(int j=0;j<adjList.size();j++){
-          //  	if(sol.getVnIp().getNodeMapping(adjList.get(j).getNodeId()) != -1){
-           // 		settledNodes.add(adjList.get(j).getNodeId());
-           // 	}
-           // 	else
-           // 		return sol;
-        //    }
-//=======
-//>>>>>>> branch 'master' of https://github.com/Clapperclaws/FAST-MULE
+            // <<<<<<< HEAD
+
+            // Add embedded nodes to the list of settled nodes
+            // for(int j=0;j<adjList.size();j++){
+            // if(sol.getVnIp().getNodeMapping(adjList.get(j).getNodeId()) !=
+            // -1){
+            // settledNodes.add(adjList.get(j).getNodeId());
+            // }
+            // else
+            // return sol;
+            // }
+            // =======
+            // >>>>>>> branch 'master' of
+            // https://github.com/Clapperclaws/FAST-MULE
 
             cleanAllMetaNodeLink();
         }
         System.out.println("Solution :" + sol);
         for (int i = 0; i < vn.getNodeCount(); ++i) {
-            if (sol.vnIp.getNodeMapping(i) == -1) {
+            if (!sol.vnIp.isNodeSettled(i, vn.getAdjList().get(i).size())) {
                 cleanAllMetaNodeLink();
                 return sol;
             }
@@ -361,12 +363,12 @@ public class CreateInitialSolution {
 
     void cleanAllMetaNodeLink() {
         // 7- Delete All MetaNodes
-       // System.out.println("Cleaning up meta nodes/links.");
+        // System.out.println("Cleaning up meta nodes/links.");
         for (int j = 0; j < ipNodesSize; j++) {
             ArrayList<EndPoint> adjMetaNodes = collapsedGraph
                     .getAdjNodesByType(j, EndPoint.type.meta);
-       //     System.out.println("Removing metanodes adjacent to " + j + ": "
-       //             + adjMetaNodes);
+            // System.out.println("Removing metanodes adjacent to " + j + ": "
+            // + adjMetaNodes);
             collapsedGraph.getAllEndPoints(j).removeAll(adjMetaNodes);
         }
 
@@ -632,9 +634,9 @@ public class CreateInitialSolution {
             int v = endPoint.getNodeId();
             int order = endPoint.getOrder();
             capacity[source][v][order] = Math.min(capacity[source][v][order],
-                    N - 1);
+                    N);
             capacity[v][source][order] = Math.min(capacity[v][source][order],
-                    N - 1);
+                    N);
         }
 
         int maxFlow = 0;
@@ -691,7 +693,7 @@ public class CreateInitialSolution {
         if (maxFlow < N - 1) {
             System.out.println("Cannot find sufficient paths between " + source
                     + " and " + sink + "; Maxflow = " + maxFlow
-                    + ", required flow = " + (N - 1));
+                    + ", required flow = " + (N));
             return null;
         }
 
