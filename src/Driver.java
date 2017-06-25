@@ -82,8 +82,10 @@ public class Driver {
         // 6- Get Initial Solution
         long startTime = System.nanoTime();
         CreateInitialSolution cis = new CreateInitialSolution(ip, otn, ipOtn);
+        final int kNumShuffles = Integer
+                .parseInt(parsedArgs.get("--num_shuffles"));
         Solutions solution = cis.getInitialSolution(vn, locationConstraints,
-                vn.getNodeCount() * 2);
+                kNumShuffles);
         long elapsedTime = System.nanoTime() - startTime;
 
         // Write solution status to file.
@@ -124,7 +126,8 @@ public class Driver {
             for (Tuple link : ipPath) {
                 int linkCost = ip.getCost(link.getSource(),
                         link.getDestination(), link.getOrder());
-                if (linkCost == -1) linkCost = 1;
+                if (linkCost == -1)
+                    linkCost = 1;
                 System.out.println("VL bw = " + bw + "; IP Link Cost = "
                         + linkCost + "\n");
                 cost += (bw * linkCost);
