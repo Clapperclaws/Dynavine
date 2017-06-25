@@ -38,7 +38,7 @@ public class CreateInitialSolution {
                                 EndPoint.type.ip, order));
             }
         }
-        System.out.println("Collapsed Graph: \n" + collapsedGraph);
+        // System.out.println("Collapsed Graph: \n" + collapsedGraph);
     }
 
     /*
@@ -185,6 +185,13 @@ public class CreateInitialSolution {
                     // adjacency list of the MetaNode
                     for (int k = 0; k < locationConstraints[vendPoint
                             .getNodeId()].size(); ++k) {
+                        // If the IP node is already used for embedding another
+                        // node then skip.
+                        if (sol.vnIp.isOccupied(
+                                locationConstraints[vendPoint.getNodeId()]
+                                        .get(k))) {
+                            continue;
+                        }
                         EndPoint ep = new EndPoint(counter, 1, 1,
                                 EndPoint.type.meta, 0);
                         collapsedGraph.addEndPoint(
@@ -253,6 +260,12 @@ public class CreateInitialSolution {
             // Could not find sufficient paths; Embedding failed.
             if (embeddingPaths == null) {
                 System.out.println("Link embedding failed!");
+                return sol;
+            }
+
+            if (embeddingPaths.size() < adjList.size()) {
+                System.out.println(
+                        "Insufficient number of paths to embed all adjacent virtual links.");
                 return sol;
             }
 
@@ -480,10 +493,8 @@ public class CreateInitialSolution {
             // Remove the new IP links from collapsedGraph.
             boolean ret = collapsedGraph.removeLink(link.getSource(),
                     link.getDestination(), link.getOrder());
-            System.out.println(ret);
             ret = collapsedGraph.removeLink(link.getDestination(),
                     link.getSource(), link.getOrder());
-            System.out.println(ret);
             // Adjust port count of the IP nodes.
             collapsedGraph.setPort(link.getSource(),
                     collapsedGraph.getPorts()[link.getSource()] + 1);
@@ -626,9 +637,9 @@ public class CreateInitialSolution {
 
             // We now push minCap units of flow through the augmenting path.
             // Update the residual capacities and flow matrix accordingly.
+            System.out.println(path);
             for (int i = 0; i < path.size(); ++i) {
                 Tuple link = path.get(i);
-                System.out.print(link.toString());
                 capacity[link.getSource()][link.getDestination()][link
                         .getOrder()] -= minCap;
                 capacity[link.getDestination()][link.getSource()][link
@@ -654,7 +665,8 @@ public class CreateInitialSolution {
         // means that embedding has failed.
         if (maxFlow < N - 1) {
             System.out.println("Cannot find sufficient paths between " + source
-                    + " and " + sink);
+                    + " and " + sink + "; Maxflow = " + maxFlow
+                    + ", required flow = " + (N - 1));
             return null;
         }
 
