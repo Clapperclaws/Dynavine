@@ -194,13 +194,14 @@ public class CreateInitialSolution {
                         } else if (locationConstraints[vendPoint.getNodeId()]
                                 .get(k) == sourceLoc) {
                             continue;
+                        } else {
+                            EndPoint ep = new EndPoint(counter, 1, 1,
+                                    EndPoint.type.meta, 0);
+                            collapsedGraph.addEndPoint(
+                                    locationConstraints[vendPoint.getNodeId()]
+                                            .get(k),
+                                    ep);
                         }
-                        EndPoint ep = new EndPoint(counter, 1, 1,
-                                EndPoint.type.meta, 0);
-                        collapsedGraph.addEndPoint(
-                                locationConstraints[vendPoint.getNodeId()]
-                                        .get(k),
-                                ep);
                     }
                 } else {
                     // Connect Meta Node to the IP Node hosting this VN.
@@ -211,8 +212,10 @@ public class CreateInitialSolution {
                 }
                 counter++;
             }
-            if (maxLinkCap <= 0)
+            if (maxLinkCap <= 0) {
+                cleanAllMetaNodeLink();
                 return sol;
+            }
             // 4- Connect all Meta Nodes to a single Sink Node
             int sink = counter;
             System.out.println("Sink Node " + sink);
@@ -263,12 +266,14 @@ public class CreateInitialSolution {
             // Could not find sufficient paths; Embedding failed.
             if (embeddingPaths == null) {
                 System.out.println("Link embedding failed!");
+                cleanAllMetaNodeLink();
                 return sol;
             }
 
             if (embeddingPaths.size() < adjList.size()) {
                 System.out.println(
                         "Insufficient number of paths to embed all adjacent virtual links.");
+                cleanAllMetaNodeLink();
                 return sol;
             }
 
@@ -326,34 +331,38 @@ public class CreateInitialSolution {
             }
 
             aggregateSolution(vn, embdSol, sol);
-
-            // 7- Delete All MetaNodes
-            for (int j = 0; j < ipNodesSize; j++) {
-                ArrayList<EndPoint> adjMetaNodes = collapsedGraph
-                        .getAdjNodesByType(j, EndPoint.type.meta);
-                collapsedGraph.getAllEndPoints(j).removeAll(adjMetaNodes);
-            }
-
-            // 8- Remove All Meta Nodes
-            List<ArrayList<EndPoint>> subList = collapsedGraph.getAdjList()
-                    .subList((ipNodesSize + otnNodesSize),
-                            collapsedGraph.getNodeCount());
-            collapsedGraph.getAdjList().removeAll(subList);
-            // System.out.println("Collapsed Graph after removal of
-            // MetaNodes:\n"
-            // + collapsedGraph);
+            cleanAllMetaNodeLink();
             if (settledNodes.size() == vn.getAdjList().size())
                 break;
         }
         System.out.println("Solution :" + sol);
         for (int i = 0; i < vn.getNodeCount(); ++i) {
-            if (sol.vnIp.getNodeMapping(i) == -1)
+            if (sol.vnIp.getNodeMapping(i) == -1) {
+                cleanAllMetaNodeLink();
                 return sol;
+            }
         }
         sol.setSuccessful(true);
         return sol;
     }
 
+    void cleanAllMetaNodeLink() {
+        // 7- Delete All MetaNodes
+        System.out.println("Cleaning up meta nodes/links.");
+        for (int j = 0; j < ipNodesSize; j++) {
+            ArrayList<EndPoint> adjMetaNodes = collapsedGraph
+                    .getAdjNodesByType(j, EndPoint.type.meta);
+            System.out.println("Removing metanodes adjacent to " + j + ": "
+                    + adjMetaNodes);
+            collapsedGraph.getAllEndPoints(j).removeAll(adjMetaNodes);
+        }
+        
+        // 8- Remove All Meta Nodes
+        List<ArrayList<EndPoint>> subList = collapsedGraph.getAdjList()
+                .subList((ipNodesSize + otnNodesSize),
+                        collapsedGraph.getNodeCount());
+        collapsedGraph.getAdjList().removeAll(subList);
+    }
     // This function iteratively aggregates the final Solution after every
     // iteration.
     public void aggregateSolution(Graph vn, OverlayMapping embdSol,
