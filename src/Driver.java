@@ -91,11 +91,15 @@ public class Driver {
         FileWriter fw = new FileWriter(filePrefix + ".status");
         BufferedWriter bw = new BufferedWriter(fw);
         if (solution != null) {
-            bw.write("Success\n");
-            WriteSolutionToFile(solution, vn, ip, filePrefix);
-            WriteSolutionCostToFile(solution, vn, ip, otn, filePrefix);
+            if (solution.getStatus() == "Success") {
+                bw.write(solution.getStatus() + "\n");
+                WriteSolutionToFile(solution, vn, ip, filePrefix);
+                WriteSolutionCostToFile(solution, vn, ip, otn, filePrefix);
+            } else {
+                bw.write(solution.getStatus() + "\n");
+            }
         } else {
-            bw.write("Failure\n");
+            bw.write("Failed\n");
         }
         bw.close();
         fw.close();

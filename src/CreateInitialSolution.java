@@ -65,8 +65,8 @@ public class CreateInitialSolution {
 
             // 2- Execute the function that performs the VN Nodes & Links
             // embedding
-            Solutions sol = execute(vn, locationConstraints, listOrder);
-            if (sol.isSuccessful()) {
+            Solutions sol = execute(vn, locationConstraints, listOrder);           
+            if (sol.getStatus() == "Success") {
                 long cost = GetSolutionCost(sol, vn);
                 System.out.println("Iter = " + Integer.toString(iter)
                         + ": Current cost = " + Long.toString(cost) + "\n");
@@ -77,6 +77,8 @@ public class CreateInitialSolution {
                 System.out.println("Iter = " + Integer.toString(iter)
                         + ": Current best cost = " + Long.toString(bestCost)
                         + "\n");
+            } else if (sol.getStatus() == "Invalid Input") {
+                return sol;
             } else {
                 System.out.println("Iter = " + Integer.toString(iter)
                         + ": no success!!\n");
@@ -230,10 +232,11 @@ public class CreateInitialSolution {
                 }
                 counter++;
             }
-          //  if (maxLinkCap <= 0) {
-          //      cleanAllMetaNodeLink();
-          //      return sol;
-          //  }
+            if (maxLinkCap <= 0) {
+                cleanAllMetaNodeLink();
+                sol.setStatus("Invalid Input");
+                return sol;
+            }
             // 4- Connect all Meta Nodes to a single Sink Node
             int sink = counter;
             System.out.println("Sink Node " + sink);
@@ -355,7 +358,7 @@ public class CreateInitialSolution {
                 return sol;
             }
         }
-        sol.setSuccessful(true);
+        sol.setStatus("Success");
         return sol;
     }
 

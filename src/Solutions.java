@@ -6,17 +6,17 @@ public class Solutions {
     OverlayMapping ipOtn; // This
     OverlayMapping vnIp;
     ArrayList<Tuple> newIpLinks;
-    boolean successful;
+    String status;
 
     public Solutions() {
-        successful = false;
+        status = "Failed";
     }
     
     public Solutions(int numVN, int numIP) {
         ipOtn = new OverlayMapping(numIP);
         vnIp = new OverlayMapping(numVN);
         newIpLinks = new ArrayList<Tuple>();
-        successful = false;
+        status = "Failed";
     }
 
     public Solutions(OverlayMapping ipOtn, OverlayMapping vnIp,
@@ -24,7 +24,7 @@ public class Solutions {
         this.ipOtn = ipOtn;
         this.vnIp = vnIp;
         this.newIpLinks = newIpLinks;
-        successful = false;
+        status = "Failed";
     }
 
     public OverlayMapping getIpOtn() {
@@ -64,12 +64,12 @@ public class Solutions {
         return -1;
     }
 
-    public boolean isSuccessful() {
-        return successful;
+    public String getStatus() {
+        return status;
     }
 
-    public void setSuccessful(boolean val) {
-        successful = val;
+    public void setStatus(String val) {
+        status = val;
     }
 
     public String toString() {
@@ -79,7 +79,7 @@ public class Solutions {
         content += ipOtn + "\n";
         content += "**** New IP Links **** \n";
         content += newIpLinks.toString() + "\n";
-        content += "Successful = " + successful + "\n";
+        content += "Successful = " + status + "\n";
         return content;
     }
 
