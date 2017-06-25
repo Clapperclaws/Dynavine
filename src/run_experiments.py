@@ -62,7 +62,7 @@ def main():
                 line = f.readline()
                 if line.strip("\r\n") == "Success":
                     costf = open(vn_topology_file + ".cost")
-                    cost = int(cost.readline().strip("\r\n"))
+                    cost = int(costf.readline().strip("\r\n"))
                     if cost < best_cost:
                         best_cost = cost
                     costf.close()
