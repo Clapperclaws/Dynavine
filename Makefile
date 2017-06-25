@@ -18,5 +18,8 @@ default: classes
 
 classes: $(CLASSES:.java=.class)
 
+jar: $(classes)
+	jar cvf fast-mule.jar $(classes) 
+
 clean:
 	$(RM) *.class
