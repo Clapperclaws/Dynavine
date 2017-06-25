@@ -165,6 +165,9 @@ public class CreateInitialSolution {
             ArrayList<EndPoint> adjList = vn.getAdjList().get(startNode);
             for (int j = 0; j < adjList.size(); j++) {
                 EndPoint vendPoint = adjList.get(j);
+                if (sol.ipOtn.isNodeSettled(vendPoint.getNodeId(),
+                        vn.getAdjList().get(vendPoint.getNodeId()).size()))
+                    continue;
                 // Add to list of Meta Nodes
                 metaNodes.add(counter);
                 vNodeToMetaNodeMap[vendPoint.getNodeId()] = counter;
