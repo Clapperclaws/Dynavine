@@ -148,14 +148,19 @@ public class CreateInitialSolution {
             System.out.println("Start Node: " + startNode);
 
             // Randomly select a node from location constraint set that is not
-            // occupied.
-            int sourceLocIdx = gn
-                    .nextInt(locationConstraints[startNode].size());
-            int sourceLoc = locationConstraints[startNode].get(sourceLocIdx);
-            while (sol.vnIp.isOccupied(sourceLoc)) {
-                sourceLocIdx = gn
+            // occupied. However, if the vnode is already placed use it's
+            // original node embedding.
+            int sourceLoc = sol.vnIp.getNodeMapping(startNode);
+            if (sourceLoc == -1) {
+                int sourceLocIdx = gn
                         .nextInt(locationConstraints[startNode].size());
                 sourceLoc = locationConstraints[startNode].get(sourceLocIdx);
+                while (sol.vnIp.isOccupied(sourceLoc)) {
+                    sourceLocIdx = gn
+                            .nextInt(locationConstraints[startNode].size());
+                    sourceLoc = locationConstraints[startNode]
+                            .get(sourceLocIdx);
+                }
             }
             System.out.println("Source Node " + sourceLoc);
 
@@ -168,7 +173,7 @@ public class CreateInitialSolution {
             ArrayList<EndPoint> adjList = vn.getAdjList().get(startNode);
             for (int j = 0; j < adjList.size(); j++) {
                 EndPoint vendPoint = adjList.get(j);
-                if (sol.ipOtn.isNodeSettled(vendPoint.getNodeId(),
+                if (sol.vnIp.isNodeSettled(vendPoint.getNodeId(),
                         vn.getAdjList().get(vendPoint.getNodeId()).size()))
                     continue;
                 vLinksToEmbed.add(new Tuple(vendPoint.getOrder(), startNode,
@@ -319,7 +324,8 @@ public class CreateInitialSolution {
                                 embdSol.setNodeMappingSolution(
                                         vLink.getDestination(),
                                         link.getSource());
-                            } else if (locationConstraints[vLink.getDestination()]
+                            } else if (locationConstraints[vLink
+                                    .getDestination()]
                                             .contains(link.getDestination())) {
                                 embdSol.setNodeMappingSolution(
                                         vLink.getDestination(),
@@ -328,11 +334,12 @@ public class CreateInitialSolution {
                             it.remove();
                         }
                     }
-                    embdSol.setLinkMappingPath(
-                            vLink, embeddingPaths.get(k));
+                    embdSol.setLinkMappingPath(vLink, embeddingPaths.get(k));
                 }
             }
             aggregateSolution(vn, embdSol, sol);
+            System.out.println("Partial Solution");
+            System.out.println(sol);
             // <<<<<<< HEAD
 
             // Add embedded nodes to the list of settled nodes
