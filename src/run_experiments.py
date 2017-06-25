@@ -6,14 +6,15 @@ import subprocess
 def execute_one_experiment(executable, otn_topology_file, ip_topology_file,
                            ip_node_mapping_file, ip_link_mapping_file,
                            ip_port_info_file, vn_topology_file,
-                           location_constraint_file):
+                           location_constraint_file, num_shuffles):
     process = subprocess.Popen([executable, "--otn_topology_file=" + otn_topology_file,
             "--ip_topology_file=" + ip_topology_file, 
             "--ip_node_mapping_file=" + ip_node_mapping_file,
             "--ip_link_mapping_file=" + ip_link_mapping_file,
             "--ip_port_info_file=" + ip_port_info_file,
             "--vn_topology_file=" + vn_topology_file,
-            "--vn_location_file=" + location_constraint_file],
+            "--vn_location_file=" + location_constraint_file,
+            "--num_shuffles=" + num_shuffles],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
     out, err = process.communicate()
     with open(vn_topology_file + ".stdout", "w") as f:
@@ -53,11 +54,12 @@ def main():
         if not os.path.isfile(vn_topology_file):
             break
         best_cost = 99999999
+        num_shuffles = 200
         for trial in range(0, 5):
             execute_one_experiment(executable, otn_topology_file, ip_topology_file,
                                    ip_node_mapping_file, ip_link_mapping_file,
                                    ip_port_info_file, vn_topology_file,
-                                   location_constraint_file)
+                                   location_constraint_file, num_shuffles)
             with open(vn_topology_file + ".status", "r") as f:
                 line = f.readline()
                 if line.strip("\r\n") == "Success":
