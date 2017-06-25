@@ -76,8 +76,10 @@ public class OverlayMapping {
     }
 
     public boolean isNodeSettled(int nodeId, int requiredLinks) {
-        if (nodeMapping[nodeId] == -1)
+        if (nodeMapping[nodeId] == -1) {
+            System.out.println(nodeId + " is not mapped!");
             return false;
+        }
         int settledLinks = 0;
         Iterator<Tuple> it = linkMapping.keySet().iterator();
         while (it.hasNext()) {
