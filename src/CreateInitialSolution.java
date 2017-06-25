@@ -56,10 +56,6 @@ public class CreateInitialSolution {
         do {
             // 1- Get a new list order
             ArrayList<Integer> listOrder = getListOrder(vn);
-            listOrder.clear();
-            listOrder.add(0);
-            listOrder.add(2);
-            listOrder.add(1);
             /*
              * ArrayList<Integer> listOrder = new ArrayList<Integer>();
              * listOrder.add(1); listOrder.add(0); listOrder.add(2);
