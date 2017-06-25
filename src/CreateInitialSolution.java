@@ -191,6 +191,9 @@ public class CreateInitialSolution {
                                 locationConstraints[vendPoint.getNodeId()]
                                         .get(k))) {
                             continue;
+                        } else if (locationConstraints[vendPoint.getNodeId()]
+                                .get(k) == sourceLoc) {
+                            continue;
                         }
                         EndPoint ep = new EndPoint(counter, 1, 1,
                                 EndPoint.type.meta, 0);
