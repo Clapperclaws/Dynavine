@@ -155,15 +155,17 @@ public class CreateInitialSolution {
             // original node embedding.
             int sourceLoc = sol.vnIp.getNodeMapping(startNode);
             if (sourceLoc == -1) {
-                int sourceLocIdx = gn
-                        .nextInt(locationConstraints[startNode].size());
-                sourceLoc = locationConstraints[startNode].get(sourceLocIdx);
-                while (sol.vnIp.isOccupied(sourceLoc)) {
-                    sourceLocIdx = gn
-                            .nextInt(locationConstraints[startNode].size());
-                    sourceLoc = locationConstraints[startNode]
-                            .get(sourceLocIdx);
+                ArrayList <Integer> candidates = new ArrayList<Integer>();
+                for (Integer location : locationConstraints[startNode]) {
+                    if (!sol.vnIp.isOccupied(location.intValue()))
+                        candidates.add(location);
                 }
+                if (candidates.isEmpty()) {
+                    cleanAllMetaNodeLink();
+                    return sol;
+                }
+                int sourceLocIdx = gn.nextInt(candidates.size());
+                sourceLoc = candidates.get(sourceLocIdx);
             }
             System.out.println("Source Node " + sourceLoc);
 
