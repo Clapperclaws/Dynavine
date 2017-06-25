@@ -140,11 +140,12 @@ public class CreateInitialSolution {
             // Get the index of the first node in the list.
             int startNode = order.get(i);
 
+            //Check if the node is settled            
             if (sol.vnIp.isNodeSettled(startNode,
                     vn.getAdjList().get(startNode).size()))
-                continue;
+                continue; // Skip this node
 
-            // settledNodes.add(startNode);
+            //Print Start Node
             System.out.println("Start Node: " + startNode);
 
             // Randomly select a node from location constraint set that is not
@@ -166,30 +167,37 @@ public class CreateInitialSolution {
 
             // 3- Create Metanodes for source's neighbors
             ArrayList<Integer> metaNodes = new ArrayList<Integer>();
-            int[] vNodeToMetaNodeMap = new int[vn.getNodeCount()];
-            Arrays.fill(vNodeToMetaNodeMap, -1);
+            int[] vNodeToMetaNodeMap = new int[vn.getNodeCount()]; //??
+            Arrays.fill(vNodeToMetaNodeMap, -1); //??
+            
             int maxLinkCap = 0;
             ArrayList<Tuple> vLinksToEmbed = new ArrayList<Tuple>();
+            
+            //For every adjacent node to the Start Node
             ArrayList<EndPoint> adjList = vn.getAdjList().get(startNode);
             for (int j = 0; j < adjList.size(); j++) {
                 EndPoint vendPoint = adjList.get(j);
                 if (sol.vnIp.isNodeSettled(vendPoint.getNodeId(),
                         vn.getAdjList().get(vendPoint.getNodeId()).size()))
-                    continue;
+                    continue; // Skip this node
+                
+                //Add the startNode-vendPoint to the list of Vlinks to map
                 vLinksToEmbed.add(new Tuple(vendPoint.getOrder(), startNode,
                         vendPoint.getNodeId()));
+                
                 // Add to list of Meta Nodes
-                metaNodes.add(counter);
-                vNodeToMetaNodeMap[vendPoint.getNodeId()] = counter;
-                if (vendPoint.getBw() > maxLinkCap)
+                metaNodes.add(counter); //Create a New Meta Node
+                vNodeToMetaNodeMap[vendPoint.getNodeId()] = counter; //?
+                
+                if (vendPoint.getBw() > maxLinkCap)//Adjust maxLinkCap
                     maxLinkCap = vendPoint.getBw();
 
                 // Create an Adjacency vector for the meta-node of each
                 // neighboring node
-                collapsedGraph.addEndPointList(counter,
+                collapsedGraph.addEndPointList(counter, //Add the meta-node to the collapsedGraph
                         new ArrayList<EndPoint>());
 
-                // a- Check if the node is settled or not
+                // a- Check if the node is not mapped
                 if (sol.vnIp.getNodeMapping(vendPoint.getNodeId()) == -1) {
                     // Add every IP node in the location constraint to the
                     // adjacency list of the MetaNode
@@ -222,10 +230,10 @@ public class CreateInitialSolution {
                 }
                 counter++;
             }
-            if (maxLinkCap <= 0) {
-                cleanAllMetaNodeLink();
-                return sol;
-            }
+          //  if (maxLinkCap <= 0) {
+          //      cleanAllMetaNodeLink();
+          //      return sol;
+          //  }
             // 4- Connect all Meta Nodes to a single Sink Node
             int sink = counter;
             System.out.println("Sink Node " + sink);
@@ -338,23 +346,6 @@ public class CreateInitialSolution {
                 }
             }
             aggregateSolution(vn, embdSol, sol);
-            System.out.println("Partial Solution");
-            System.out.println(sol);
-            // <<<<<<< HEAD
-
-            // Add embedded nodes to the list of settled nodes
-            // for(int j=0;j<adjList.size();j++){
-            // if(sol.getVnIp().getNodeMapping(adjList.get(j).getNodeId()) !=
-            // -1){
-            // settledNodes.add(adjList.get(j).getNodeId());
-            // }
-            // else
-            // return sol;
-            // }
-            // =======
-            // >>>>>>> branch 'master' of
-            // https://github.com/Clapperclaws/FAST-MULE
-
             cleanAllMetaNodeLink();
         }
         System.out.println("Solution :" + sol);
