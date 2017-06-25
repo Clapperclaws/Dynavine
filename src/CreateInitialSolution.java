@@ -1,3 +1,4 @@
+import java.awt.event.AdjustmentListener;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -126,12 +127,10 @@ public class CreateInitialSolution {
     public Solutions execute(Graph vn, ArrayList<Integer>[] locationConstraints,
             ArrayList<Integer> order) {
         Solutions sol = new Solutions(vn.getAdjList().size(), ipNodesSize);
-        ArrayList<Integer> settledNodes = new ArrayList<Integer>();
         Random gn = new Random();
 
         // This counter will be used to set the ID of newly create metanodes
         int counter = otnNodesSize + ipNodesSize;
-
         System.out.println(order);
         // 1- For each node in N
         for (int i = 0; i < order.size(); i++) {
@@ -141,9 +140,11 @@ public class CreateInitialSolution {
             // Get the index of the first node in the list.
             int startNode = order.get(i);
 
-            if (settledNodes.contains(startNode))
+            if (sol.vnIp.isNodeSettled(startNode,
+                    vn.getAdjList().get(startNode).size()))
                 continue;
-            settledNodes.add(startNode);
+
+            // settledNodes.add(startNode);
             System.out.println("Start Node: " + startNode);
 
             // Randomly select a node from location constraint set that is not
@@ -166,7 +167,6 @@ public class CreateInitialSolution {
             ArrayList<EndPoint> adjList = vn.getAdjList().get(startNode);
             for (int j = 0; j < adjList.size(); j++) {
                 EndPoint vendPoint = adjList.get(j);
-
                 // Add to list of Meta Nodes
                 metaNodes.add(counter);
                 vNodeToMetaNodeMap[vendPoint.getNodeId()] = counter;
@@ -179,8 +179,7 @@ public class CreateInitialSolution {
                         new ArrayList<EndPoint>());
 
                 // a- Check if the node is settled or not
-                if (!settledNodes.contains(vendPoint.getNodeId())) {
-                    
+                if (sol.vnIp.getNodeMapping(vendPoint.getNodeId()) == -1) {
                     // Add every IP node in the location constraint to the
                     // adjacency list of the MetaNode
                     for (int k = 0; k < locationConstraints[vendPoint
@@ -194,13 +193,14 @@ public class CreateInitialSolution {
                         } else if (locationConstraints[vendPoint.getNodeId()]
                                 .get(k) == sourceLoc) {
                             continue;
+                        } else {
+                            EndPoint ep = new EndPoint(counter, 1, 1,
+                                    EndPoint.type.meta, 0);
+                            collapsedGraph.addEndPoint(
+                                    locationConstraints[vendPoint.getNodeId()]
+                                            .get(k),
+                                    ep);
                         }
-                        EndPoint ep = new EndPoint(counter, 1, 1,
-                                EndPoint.type.meta, 0);
-                        collapsedGraph.addEndPoint(
-                                locationConstraints[vendPoint.getNodeId()]
-                                        .get(k),
-                                ep);
                     }
                 } else {
                     // Connect Meta Node to the IP Node hosting this VN.
@@ -211,8 +211,10 @@ public class CreateInitialSolution {
                 }
                 counter++;
             }
-            if (maxLinkCap <= 0)
+            if (maxLinkCap <= 0) {
+                cleanAllMetaNodeLink();
                 return sol;
+            }
             // 4- Connect all Meta Nodes to a single Sink Node
             int sink = counter;
             System.out.println("Sink Node " + sink);
@@ -263,12 +265,14 @@ public class CreateInitialSolution {
             // Could not find sufficient paths; Embedding failed.
             if (embeddingPaths == null) {
                 System.out.println("Link embedding failed!");
+                cleanAllMetaNodeLink();
                 return sol;
             }
 
             if (embeddingPaths.size() < adjList.size()) {
                 System.out.println(
                         "Insufficient number of paths to embed all adjacent virtual links.");
+                cleanAllMetaNodeLink();
                 return sol;
             }
 
@@ -282,7 +286,7 @@ public class CreateInitialSolution {
                 int metanode = vNodeToMetaNodeMap[vendPoint.getNodeId()];
                 if (metanode == -1)
                     continue;
-                
+
                 int k = 0;
                 for (; k < embeddingPaths.size(); ++k) {
                     ArrayList<Tuple> path = embeddingPaths.get(k);
@@ -325,44 +329,48 @@ public class CreateInitialSolution {
                             embeddingPaths.get(k));
                 }
             }
-
             aggregateSolution(vn, embdSol, sol);
+//<<<<<<< HEAD
             
          // Add embedded nodes to the list of settled nodes
-            for(int j=0;j<adjList.size();j++){
-            	if(sol.getVnIp().getNodeMapping(adjList.get(j).getNodeId()) != -1){
-            		settledNodes.add(adjList.get(j).getNodeId());
-            	}
-            	else
-            		return sol;
-            }
+         //   for(int j=0;j<adjList.size();j++){
+          //  	if(sol.getVnIp().getNodeMapping(adjList.get(j).getNodeId()) != -1){
+           // 		settledNodes.add(adjList.get(j).getNodeId());
+           // 	}
+           // 	else
+           // 		return sol;
+        //    }
+//=======
+//>>>>>>> branch 'master' of https://github.com/Clapperclaws/FAST-MULE
 
-
-            // 7- Delete All MetaNodes
-            for (int j = 0; j < ipNodesSize; j++) {
-                ArrayList<EndPoint> adjMetaNodes = collapsedGraph
-                        .getAdjNodesByType(j, EndPoint.type.meta);
-                collapsedGraph.getAllEndPoints(j).removeAll(adjMetaNodes);
-            }
-
-            // 8- Remove All Meta Nodes
-            List<ArrayList<EndPoint>> subList = collapsedGraph.getAdjList()
-                    .subList((ipNodesSize + otnNodesSize),
-                            collapsedGraph.getNodeCount());
-            collapsedGraph.getAdjList().removeAll(subList);
-            // System.out.println("Collapsed Graph after removal of
-            // MetaNodes:\n"
-            // + collapsedGraph);
-            if (settledNodes.size() == vn.getAdjList().size())
-                break;
+            cleanAllMetaNodeLink();
         }
         System.out.println("Solution :" + sol);
         for (int i = 0; i < vn.getNodeCount(); ++i) {
-            if (sol.vnIp.getNodeMapping(i) == -1)
+            if (sol.vnIp.getNodeMapping(i) == -1) {
+                cleanAllMetaNodeLink();
                 return sol;
+            }
         }
         sol.setSuccessful(true);
         return sol;
+    }
+
+    void cleanAllMetaNodeLink() {
+        // 7- Delete All MetaNodes
+       // System.out.println("Cleaning up meta nodes/links.");
+        for (int j = 0; j < ipNodesSize; j++) {
+            ArrayList<EndPoint> adjMetaNodes = collapsedGraph
+                    .getAdjNodesByType(j, EndPoint.type.meta);
+       //     System.out.println("Removing metanodes adjacent to " + j + ": "
+       //             + adjMetaNodes);
+            collapsedGraph.getAllEndPoints(j).removeAll(adjMetaNodes);
+        }
+
+        // 8- Remove All Meta Nodes
+        List<ArrayList<EndPoint>> subList = collapsedGraph.getAdjList().subList(
+                (ipNodesSize + otnNodesSize), collapsedGraph.getNodeCount());
+        collapsedGraph.getAdjList().removeAll(subList);
     }
 
     // This function iteratively aggregates the final Solution after every
