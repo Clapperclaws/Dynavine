@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 
@@ -72,6 +73,21 @@ public class OverlayMapping {
                 return true;
         }
         return false;
+    }
+
+    public boolean isNodeSettled(int nodeId, int requiredLinks) {
+        if (nodeMapping[nodeId] == -1)
+            return false;
+        int settledLinks = 0;
+        Iterator<Tuple> it = linkMapping.keySet().iterator();
+        while (it.hasNext()) {
+            Tuple vLink = it.next();
+            if (vLink.getSource() == nodeId)
+                ++settledLinks;
+            if (vLink.getDestination() == nodeId)
+                ++settledLinks;
+        }
+        return settledLinks == requiredLinks;
     }
 
     // Print the content of the overlay mapping

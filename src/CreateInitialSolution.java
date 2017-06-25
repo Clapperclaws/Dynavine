@@ -1,3 +1,4 @@
+import java.awt.event.AdjustmentListener;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -124,12 +125,10 @@ public class CreateInitialSolution {
     public Solutions execute(Graph vn, ArrayList<Integer>[] locationConstraints,
             ArrayList<Integer> order) {
         Solutions sol = new Solutions(vn.getAdjList().size(), ipNodesSize);
-        ArrayList<Integer> settledNodes = new ArrayList<Integer>();
         Random gn = new Random();
 
         // This counter will be used to set the ID of newly create metanodes
         int counter = otnNodesSize + ipNodesSize;
-
         System.out.println(order);
         // 1- For each node in N
         for (int i = 0; i < order.size(); i++) {
@@ -139,9 +138,11 @@ public class CreateInitialSolution {
             // Get the index of the first node in the list.
             int startNode = order.get(i);
 
-            if (settledNodes.contains(startNode))
+            if (sol.vnIp.isNodeSettled(startNode,
+                    vn.getAdjList().get(startNode).size()))
                 continue;
-            settledNodes.add(startNode);
+
+            // settledNodes.add(startNode);
             System.out.println("Start Node: " + startNode);
 
             // Randomly select a node from location constraint set that is not
@@ -164,7 +165,6 @@ public class CreateInitialSolution {
             ArrayList<EndPoint> adjList = vn.getAdjList().get(startNode);
             for (int j = 0; j < adjList.size(); j++) {
                 EndPoint vendPoint = adjList.get(j);
-
                 // Add to list of Meta Nodes
                 metaNodes.add(counter);
                 vNodeToMetaNodeMap[vendPoint.getNodeId()] = counter;
@@ -177,8 +177,7 @@ public class CreateInitialSolution {
                         new ArrayList<EndPoint>());
 
                 // a- Check if the node is settled or not
-                if (!settledNodes.contains(vendPoint.getNodeId())) {
-
+                if (sol.vnIp.getNodeMapping(vendPoint.getNodeId()) == -1) {
                     // Add every IP node in the location constraint to the
                     // adjacency list of the MetaNode
                     for (int k = 0; k < locationConstraints[vendPoint
@@ -328,18 +327,8 @@ public class CreateInitialSolution {
                             embeddingPaths.get(k));
                 }
             }
-
             aggregateSolution(vn, embdSol, sol);
 
-            // Add embedded nodes to the list of settled nodes
-            for (int j = 0; j < adjList.size(); j++) {
-                if (sol.getVnIp()
-                        .getNodeMapping(adjList.get(j).getNodeId()) != -1) {
-                    settledNodes.add(adjList.get(j).getNodeId());
-                }
-            }
-            if (settledNodes.size() == vn.getAdjList().size())
-                break;
             cleanAllMetaNodeLink();
         }
         System.out.println("Solution :" + sol);

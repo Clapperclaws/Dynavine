@@ -66,8 +66,6 @@ public class Graph {
 
     // Add a single end point to the list of end points for a given node.
     public void addEndPoint(int nodeId, EndPoint endPnt) {
-        if ((nodeId == 0 || nodeId == 4) && (endPnt.getNodeId() == 0 || endPnt.getNodeId() == 4))
-            System.out.println("Gotcha!!");
         adjList.get(nodeId).add(endPnt);
     }
 
