@@ -14,7 +14,7 @@ def execute_one_experiment(executable, otn_topology_file, ip_topology_file,
             "--ip_port_info_file=" + ip_port_info_file,
             "--vn_topology_file=" + vn_topology_file,
             "--vn_location_file=" + location_constraint_file,
-            "--num_shuffles=" + num_shuffles],
+            "--num_shuffles=" + str(num_shuffles)],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
     out, err = process.communicate()
     with open(vn_topology_file + ".stdout", "w") as f:
