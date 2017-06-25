@@ -333,18 +333,6 @@ public class CreateInitialSolution {
                 }
             }
             aggregateSolution(vn, embdSol, sol);
-//<<<<<<< HEAD
-            
-         // Add embedded nodes to the list of settled nodes
-         //   for(int j=0;j<adjList.size();j++){
-          //  	if(sol.getVnIp().getNodeMapping(adjList.get(j).getNodeId()) != -1){
-           // 		settledNodes.add(adjList.get(j).getNodeId());
-           // 	}
-           // 	else
-           // 		return sol;
-        //    }
-//=======
-//>>>>>>> branch 'master' of https://github.com/Clapperclaws/FAST-MULE
 
             cleanAllMetaNodeLink();
         }
