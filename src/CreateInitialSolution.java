@@ -178,8 +178,6 @@ public class CreateInitialSolution {
 
                 // a- Check if the node is settled or not
                 if (!settledNodes.contains(vendPoint.getNodeId())) {
-                    // Add the adjacent nodes to the list of settled nodes
-                    settledNodes.add(vendPoint.getNodeId());
 
                     // Add every IP node in the location constraint to the
                     // adjacency list of the MetaNode
@@ -287,6 +285,7 @@ public class CreateInitialSolution {
                 int metanode = vNodeToMetaNodeMap[vendPoint.getNodeId()];
                 if (metanode == -1)
                     continue;
+
                 int k = 0;
                 for (; k < embeddingPaths.size(); ++k) {
                     ArrayList<Tuple> path = embeddingPaths.get(k);
@@ -331,9 +330,17 @@ public class CreateInitialSolution {
             }
 
             aggregateSolution(vn, embdSol, sol);
-            cleanAllMetaNodeLink();
+
+            // Add embedded nodes to the list of settled nodes
+            for (int j = 0; j < adjList.size(); j++) {
+                if (sol.getVnIp()
+                        .getNodeMapping(adjList.get(j).getNodeId()) != -1) {
+                    settledNodes.add(adjList.get(j).getNodeId());
+                }
+            }
             if (settledNodes.size() == vn.getAdjList().size())
                 break;
+            cleanAllMetaNodeLink();
         }
         System.out.println("Solution :" + sol);
         for (int i = 0; i < vn.getNodeCount(); ++i) {
@@ -356,13 +363,13 @@ public class CreateInitialSolution {
                     + adjMetaNodes);
             collapsedGraph.getAllEndPoints(j).removeAll(adjMetaNodes);
         }
-        
+
         // 8- Remove All Meta Nodes
-        List<ArrayList<EndPoint>> subList = collapsedGraph.getAdjList()
-                .subList((ipNodesSize + otnNodesSize),
-                        collapsedGraph.getNodeCount());
+        List<ArrayList<EndPoint>> subList = collapsedGraph.getAdjList().subList(
+                (ipNodesSize + otnNodesSize), collapsedGraph.getNodeCount());
         collapsedGraph.getAdjList().removeAll(subList);
     }
+
     // This function iteratively aggregates the final Solution after every
     // iteration.
     public void aggregateSolution(Graph vn, OverlayMapping embdSol,
