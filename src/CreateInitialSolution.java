@@ -205,7 +205,8 @@ public class CreateInitialSolution {
                 }
                 counter++;
             }
-
+            if (maxLinkCap <= 0)
+                return sol;
             // 4- Connect all Meta Nodes to a single Sink Node
             int sink = counter;
             System.out.println("Sink Node " + sink);
@@ -626,7 +627,7 @@ public class CreateInitialSolution {
                 break;
             maxFlow += minCap;
             augPaths.add(path);
-            
+
             // We now push minCap units of flow through the augmenting path.
             // Update the residual capacities and flow matrix accordingly.
             for (int i = 0; i < path.size(); ++i) {
