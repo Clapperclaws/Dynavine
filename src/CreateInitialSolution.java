@@ -57,7 +57,9 @@ public class CreateInitialSolution {
             // 1- Get a new list order
             ArrayList<Integer> listOrder = getListOrder(vn);
             listOrder.clear();
-            listOrder.add(0); listOrder.add(2); listOrder.add(1);
+            listOrder.add(0);
+            listOrder.add(2);
+            listOrder.add(1);
             /*
              * ArrayList<Integer> listOrder = new ArrayList<Integer>();
              * listOrder.add(1); listOrder.add(0); listOrder.add(2);
@@ -243,8 +245,8 @@ public class CreateInitialSolution {
                     counter++;
                 }
             }
-            //System.out.println(
-            //       "Collapsed Graph with Meta Nodes \n" + collapsedGraph);
+            // System.out.println(
+            // "Collapsed Graph with Meta Nodes \n" + collapsedGraph);
 
             // 4- Call EK
             ArrayList<ArrayList<Tuple>> embeddingPaths = MaxFlow(collapsedGraph,
@@ -324,8 +326,9 @@ public class CreateInitialSolution {
                     .subList((ipNodesSize + otnNodesSize),
                             collapsedGraph.getNodeCount());
             collapsedGraph.getAdjList().removeAll(subList);
-            //System.out.println("Collapsed Graph after removal of MetaNodes:\n"
-            //        + collapsedGraph);
+            // System.out.println("Collapsed Graph after removal of
+            // MetaNodes:\n"
+            // + collapsedGraph);
             if (settledNodes.size() == vn.getAdjList().size())
                 break;
         }
@@ -470,19 +473,19 @@ public class CreateInitialSolution {
 
     void resetCollapsedGraph(Solutions sol) {
         ArrayList<Tuple> newIps = sol.getNewIpLinks();
-        for (int i = 0; i < newIps.size(); ++i) {           
+        for (int i = 0; i < newIps.size(); ++i) {
             Tuple link = newIps.get(i);
-            System.out.println("Removing IP link (" + link.getSource() + 
-                    ", " + link.getDestination() + "," + link.getOrder() + ")");
+            System.out.println("Removing IP link (" + link.getSource() + ", "
+                    + link.getDestination() + "," + link.getOrder() + ")");
             int bw = collapsedGraph.getBW(link.getSource(),
                     link.getDestination(), link.getOrder());
-            
+
             // Remove the new IP links from collapsedGraph.
-            boolean ret = collapsedGraph.removeLink(link.getSource(), link.getDestination(),
-                    link.getOrder());
+            boolean ret = collapsedGraph.removeLink(link.getSource(),
+                    link.getDestination(), link.getOrder());
             System.out.println(ret);
-            ret = collapsedGraph.removeLink(link.getDestination(), link.getSource(),
-                    link.getOrder());
+            ret = collapsedGraph.removeLink(link.getDestination(),
+                    link.getSource(), link.getOrder());
             System.out.println(ret);
             // Adjust port count of the IP nodes.
             collapsedGraph.setPort(link.getSource(),
@@ -492,7 +495,7 @@ public class CreateInitialSolution {
 
             // Restore bandwidth on the mapped OTN path.
             ArrayList<Tuple> otnPath = sol.ipOtn.getLinkMapping(link);
-            updateResidualCapacity(link, otnPath, -bw);            
+            updateResidualCapacity(link, otnPath, -bw);
         }
     }
 
@@ -542,17 +545,17 @@ public class CreateInitialSolution {
         int[][][] capacity = new int[kNodeCount][kNodeCount][];
         int[][][] flow = new int[kNodeCount][kNodeCount][];
         for (int i = 0; i < collapsedGraph.getNodeCount(); ++i) {
-            for (int j = i + 1; j < collapsedGraph.getNodeCount(); ++j) {
+            for (int j = 0; j < collapsedGraph.getNodeCount(); ++j) {
                 if (i >= 0 && i < ipNodesSize) {
-                    capacity[i][j] = capacity[j][i] = new int[collapsedGraph
-                            .getPorts()[i]];
-                    flow[i][j] = flow[j][i] = new int[collapsedGraph
-                            .getPorts()[i]];
+                    capacity[i][j] = new int[collapsedGraph.getPorts()[i]];
+                    flow[i][j] = new int[collapsedGraph.getPorts()[i]];
+                } else if ((i >= ipNodesSize && i < ipNodesSize + otnNodesSize)
+                        && (j >= 0 && j < ipNodesSize)) {
+                    capacity[i][j] = new int[collapsedGraph.getPorts()[j]];
+                    flow[i][j] = new int[collapsedGraph.getPorts()[j]];
                 } else {
                     capacity[i][j] = new int[1];
-                    capacity[j][i] = new int[1];
                     flow[i][j] = new int[1];
-                    flow[j][i] = new int[1];
                 }
             }
         }
@@ -576,11 +579,12 @@ public class CreateInitialSolution {
             ArrayList<EndPoint> adjList = collapsedGraph.getAdjList().get(i);
             for (int j = 0; j < adjList.size(); ++j) {
                 EndPoint endPoint = adjList.get(j);
-                if (endPoint == null) System.out.println("Endpoint null :O!!");
+                if (endPoint.getNodeId() == i) {
+                    capacity[i][endPoint.getNodeId()][endPoint.getOrder()] = 0;
+                    continue;
+                }
                 if (endPoint.getT() == EndPoint.type.meta) {
                     capacity[i][endPoint.getNodeId()][endPoint.getOrder()] = 1;
-                    // capacity[endPoint.getNodeId()][i][endPoint.getOrder()] =
-                    // 0;
                 } else {
                     capacity[i][endPoint.getNodeId()][endPoint
                             .getOrder()] = endPoint.getBw() / maxLinkCap;
@@ -620,9 +624,9 @@ public class CreateInitialSolution {
             }
             if (minCap == Integer.MAX_VALUE)
                 break;
-
             maxFlow += minCap;
             augPaths.add(path);
+            
             // We now push minCap units of flow through the augmenting path.
             // Update the residual capacities and flow matrix accordingly.
             for (int i = 0; i < path.size(); ++i) {
