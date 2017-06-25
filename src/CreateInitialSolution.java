@@ -178,9 +178,7 @@ public class CreateInitialSolution {
 
                 // a- Check if the node is settled or not
                 if (!settledNodes.contains(vendPoint.getNodeId())) {
-                    // Add the adjacent nodes to the list of settled nodes
-                    settledNodes.add(vendPoint.getNodeId());
-
+                    
                     // Add every IP node in the location constraint to the
                     // adjacency list of the MetaNode
                     for (int k = 0; k < locationConstraints[vendPoint
@@ -282,6 +280,7 @@ public class CreateInitialSolution {
                 int metanode = vNodeToMetaNodeMap[vendPoint.getNodeId()];
                 if (metanode == -1)
                     continue;
+                
                 int k = 0;
                 for (; k < embeddingPaths.size(); ++k) {
                     ArrayList<Tuple> path = embeddingPaths.get(k);
@@ -326,6 +325,14 @@ public class CreateInitialSolution {
             }
 
             aggregateSolution(vn, embdSol, sol);
+            
+         // Add embedded nodes to the list of settled nodes
+            for(int j=0;j<adjList.size();j++){
+            	if(sol.getVnIp().getNodeMapping(adjList.get(j).getNodeId()) != -1){
+            		settledNodes.add(adjList.get(j).getNodeId());
+            	}
+            }
+
 
             // 7- Delete All MetaNodes
             for (int j = 0; j < ipNodesSize; j++) {
