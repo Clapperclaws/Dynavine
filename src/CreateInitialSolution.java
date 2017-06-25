@@ -335,7 +335,7 @@ public class CreateInitialSolution {
         System.out.println("Solution :" + sol);
         for (int i = 0; i < vn.getNodeCount(); ++i) {
             if (sol.vnIp.getNodeMapping(i) == -1)
-                return null;
+                return sol;
         }
         sol.setSuccessful(true);
         return sol;
