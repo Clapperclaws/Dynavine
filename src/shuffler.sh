@@ -6,4 +6,5 @@ do
   do
     python run_experiment.py --executable ./ml_vne --testcase_root $testcase --num_shuffles $num_shuffles
     cp -r $testcase $testcase.$num_shuffles
+  done
 done
