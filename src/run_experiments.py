@@ -37,6 +37,10 @@ def main():
         '--executable',
         help='Name of the executable file to run',
         required=True)
+    parser.add_argument(
+        '--num_shuffles',
+        help='Number of times to shuffle the vnode ordering',
+        required=False)
     args = parser.parse_args()
     root = args.testcase_root
     executable = './' + args.executable
@@ -54,12 +58,11 @@ def main():
         if not os.path.isfile(vn_topology_file):
             break
         best_cost = 99999999
-        num_shuffles = 200
         for trial in range(0, 5):
             execute_one_experiment(executable, otn_topology_file, ip_topology_file,
                                    ip_node_mapping_file, ip_link_mapping_file,
                                    ip_port_info_file, vn_topology_file,
-                                   location_constraint_file, num_shuffles)
+                                   location_constraint_file, args.num_shuffles)
             with open(vn_topology_file + ".status", "r") as f:
                 line = f.readline()
                 if line.strip("\r\n") == "Success":
