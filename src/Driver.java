@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Scanner;
@@ -23,6 +24,14 @@ public class Driver {
     private static String ipLinkMapFile;
     private static String ipPortInfoFile;
 
+    public static ArrayList<Integer> getListOrder(int k) {
+        ArrayList<Integer> order = new ArrayList<Integer>();
+        for (int i = 0; i < k; i++)
+            order.add(i);
+        Collections.shuffle(order);
+        return order;
+    }
+
     private static HashMap<String, String> ParseArgs(String[] args) {
         HashMap<String, String> ret = new HashMap<String, String>();
         for (int i = 0; i < args.length; ++i) {
@@ -32,34 +41,35 @@ public class Driver {
         return ret;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args)
+            throws IOException, InterruptedException {
         HashMap<String, String> parsedArgs = ParseArgs(args);
         // 1-Initialize OTN Graph
         otnLinks = new ArrayList<Tuple>();
         Graph otn = ReadTopology(parsedArgs.get("--otn_topology_file"),
                 EndPoint.type.otn, otnLinks);
         // Print graph for testing.
-        System.out.println("******* OTN Graph ******* \n" + otn);
+        // System.out.println("******* OTN Graph ******* \n" + otn);
 
         // 2-Initialize IP Graph & populate ipLinks.
         ipLinks = new ArrayList<Tuple>();
         Graph ip = ReadTopology(parsedArgs.get("--ip_topology_file"),
                 EndPoint.type.ip, ipLinks);
         // Print graph for testing
-        System.out.println("******* IP Graph ******* \n" + ip);
+        // System.out.println("******* IP Graph ******* \n" + ip);
 
         // Read IP Ports and Port Capacities
         ReadPortAttributes(parsedArgs.get("--ip_port_info_file"), ip);
-        for (int i = 0; i < ip.getPorts().length; i++)
-            System.out.println("Node " + i + " has " + ip.getPorts()[i]
-                    + " ports each of capacity " + ip.getPortCapacity()[i]);
+        // for (int i = 0; i < ip.getPorts().length; i++)
+        // System.out.println("Node " + i + " has " + ip.getPorts()[i]
+        // + " ports each of capacity " + ip.getPortCapacity()[i]);
 
         // 3- Map IP to OTN
         OverlayMapping ipOtn = ReadOverlayMapping(ip.getAdjList().size(),
                 parsedArgs.get("--ip_node_mapping_file"),
                 parsedArgs.get("--ip_link_mapping_file"));
-        System.out.println(
-                "******* IP to OTN Overlay Mapping: ******* \n" + ipOtn);
+        // System.out.println(
+        // "******* IP to OTN Overlay Mapping: ******* \n" + ipOtn);
 
         // 4- Initialize VN Graph
         vnLinks = new ArrayList<Tuple>();
@@ -72,20 +82,51 @@ public class Driver {
         // for each VN node).
         ArrayList<Integer> locationConstraints[] = ReadLocationConstraints(
                 parsedArgs.get("--vn_location_file"), vn.getAdjList().size());
-        for (int i = 0; i < locationConstraints.length; i++) {
-            System.out.println("Location Constraints of node " + i);
-            for (int j = 0; j < locationConstraints[i].size(); j++)
-                System.out.print(locationConstraints[i].get(j) + ",");
-            System.out.println();
-        }
+        // for (int i = 0; i < locationConstraints.length; i++) {
+        // System.out.println("Location Constraints of node " + i);
+        // for (int j = 0; j < locationConstraints[i].size(); j++)
+        // System.out.print(locationConstraints[i].get(j) + ",");
+        // System.out.println();
+        // }
 
         // 6- Get Initial Solution
         long startTime = System.nanoTime();
-        CreateInitialSolution cis = new CreateInitialSolution(ip, otn, ipOtn);
+        // CreateInitialSolution cis = new CreateInitialSolution(ip, otn,
+        // ipOtn);
         final int kNumShuffles = Integer
                 .parseInt(parsedArgs.get("--num_shuffles"));
-        Solutions solution = cis.getInitialSolution(vn, locationConstraints,
-                kNumShuffles);
+
+        // Spawn threads to create solutions !!
+        // First generate the possible vnode orders that we will be considering.
+        // Now spawn a thread, pass each thread the order and also a placeholder
+        // where to put the solution.
+        ArrayList<Thread> threadList = new ArrayList<Thread>();
+        ArrayList<Solutions> solutions = new ArrayList<Solutions>();
+        ArrayList<ArrayList<Integer>> vnodeOrder = new ArrayList<ArrayList<Integer>>();
+        for (int i = 0; i < kNumShuffles; ++i) {
+            solutions.add(new Solutions());
+            vnodeOrder.add(getListOrder(vn.getNodeCount()));
+            threadList.add(new ParallelSolver(solutions, i, vnodeOrder.get(i),
+                    ip, otn, vn, locationConstraints, ipOtn));
+            threadList.get(i).start();
+        }
+        for (int i = 0; i < kNumShuffles; ++i) {
+            threadList.get(i).join();
+        }
+        Solutions solution = null;
+        long bestCost = Long.MAX_VALUE;
+        for (int i = 0; i < kNumShuffles; ++i) {
+            if (solutions.get(i) == null)
+                continue;
+            long cost = solutions.get(i).getCost();
+            if (cost < bestCost) {
+                cost = bestCost;
+                solution = solutions.get(i);
+            }
+        }
+
+        // Solutions solution = cis.getInitialSolution(vn, locationConstraints,
+        // kNumShuffles);
         long elapsedTime = System.nanoTime() - startTime;
 
         // Write solution status to file.

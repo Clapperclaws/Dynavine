@@ -1,7 +1,3 @@
-import java.awt.event.AdjustmentListener;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -18,8 +14,10 @@ public class CreateInitialSolution {
     int ipNodesSize = 0;
     int otnNodesSize = 0;
     OverlayMapping ipOtn;
-
-    public CreateInitialSolution(Graph ip, Graph otn, OverlayMapping ipOtn) {
+    ArrayList<Integer> listOrder;
+    
+    public CreateInitialSolution(Graph ip, Graph otn, OverlayMapping ipOtn,
+            ArrayList<Integer> listOrder) {
         ipNodesSize = ip.getAdjList().size();
         otnNodesSize = otn.getAdjList().size();
         this.ipOtn = ipOtn;
@@ -40,6 +38,7 @@ public class CreateInitialSolution {
                                 EndPoint.type.ip, order));
             }
         }
+        this.listOrder = listOrder;
         // System.out.println("Collapsed Graph: \n" + collapsedGraph);
     }
 
@@ -49,52 +48,56 @@ public class CreateInitialSolution {
      * iterations k
      */
     public Solutions getInitialSolution(Graph vn,
-            ArrayList<Integer>[] locationConstraints, int k) {
+            ArrayList<Integer>[] locationConstraints) {
         // 1- Initialize the list of solutions that will store the solution
         // generated at the end of every run
-        int iter = 0;
-        Solutions bestSolution = null;
-        long bestCost = Integer.MAX_VALUE;
-        do {
-
+        // int iter = 0;
+        // Solutions bestSolution = null;
+        // long bestCost = Integer.MAX_VALUE;
+        // do {
             // 1- Get a new list order
-            ArrayList<Integer> listOrder = getListOrder(vn);
+            // ArrayList<Integer> listOrder = getListOrder(vn);
 
             // Create a copy of the collapsed graph - Reset the graph
             collapsedGraph = new Graph(rootCollapsedGraph);
 
             // 2- Execute the function that performs the VN Nodes & Links
             // embedding
-            Solutions sol = execute(vn, locationConstraints, listOrder);           
-            if (sol.getStatus() == "Success") {
-                long cost = GetSolutionCost(sol, vn);
-                System.out.println("Iter = " + Integer.toString(iter)
-                        + ": Current cost = " + Long.toString(cost) + "\n");
-                if (cost < bestCost) {
-                    bestCost = cost;
-                    bestSolution = sol;
-                }
-                System.out.println("Iter = " + Integer.toString(iter)
-                        + ": Current best cost = " + Long.toString(bestCost)
-                        + "\n");
-            } else if (sol.getStatus() == "Invalid Input") {
+            Solutions sol = execute(vn, locationConstraints, listOrder);
+            if (sol.getStatus() == "Success")
                 return sol;
-            } else {
-                System.out.println("Iter = " + Integer.toString(iter)
-                        + ": no success!!\n");
-            }
-            resetCollapsedGraph(sol);
-            ++iter;
-        } while (iter < k);
+            return null;
+            
+            // if (sol.getStatus() == "Success") {
+                //long cost = GetSolutionCost(sol, vn);
+                //sol.setCost(cost);
+                // System.out.println("Iter = " + Integer.toString(iter)
+                //         + ": Current cost = " + Long.toString(cost) + "\n");
+                //if (cost < bestCost) {
+                //    bestCost = cost;
+                //    bestSolution = sol;
+                //}
+                //System.out.println("Iter = " + Integer.toString(iter)
+                //        + ": Current best cost = " + Long.toString(bestCost)
+                //        + "\n");
+            // } else if (sol.getStatus() == "Invalid Input") {
+            //     return sol;
+            // } else {
+            //     System.out.println("Iter = " + Integer.toString(iter)
+            //             + ": no success!!\n");
+            // }
+            // resetCollapsedGraph(sol);
+            // ++iter;
+        // } while (iter < k);
 
         // 3- Find the solution with the lowest cost
         // return execute(vn, locationConstraints, listOrder);
         // 4- Return lowest cost solution
         // return sol;
-        System.out.println(
-                "Best solution cost = " + Long.toString(bestCost) + "\n");
-        System.out.println(bestSolution);
-        return bestSolution;
+        // System.out.println(
+        //         "Best solution cost = " + Long.toString(bestCost) + "\n");
+        // System.out.println(bestSolution);
+        // return sol;
     }
 
     private long GetSolutionCost(Solutions solution, Graph vn) {

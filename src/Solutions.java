@@ -7,6 +7,7 @@ public class Solutions {
     OverlayMapping vnIp;
     ArrayList<Tuple> newIpLinks;
     String status;
+    long cost;
 
     public Solutions() {
         status = "Failed";
@@ -16,6 +17,7 @@ public class Solutions {
         ipOtn = new OverlayMapping(numIP);
         vnIp = new OverlayMapping(numVN);
         newIpLinks = new ArrayList<Tuple>();
+        cost = Long.MAX_VALUE;
         status = "Failed";
     }
 
@@ -24,6 +26,7 @@ public class Solutions {
         this.ipOtn = ipOtn;
         this.vnIp = vnIp;
         this.newIpLinks = newIpLinks;
+        cost = Long.MAX_VALUE;
         status = "Failed";
     }
 
@@ -49,6 +52,14 @@ public class Solutions {
 
     public void setNewIpLinks(ArrayList<Tuple> newIpLinks) {
         this.newIpLinks = newIpLinks;
+    }
+    
+    public void setCost(long cost) {
+        this.cost = cost;
+    }
+    
+    public long getCost() {
+        return this.cost;
     }
 
     public int isIPLinkCreated(int source, int destination) {
