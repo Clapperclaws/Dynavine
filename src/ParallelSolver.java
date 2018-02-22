@@ -33,11 +33,9 @@ public class ParallelSolver extends Thread {
 
     @Override
     public void run() {
-        Solutions solution = null;
         CreateInitialSolution cis = new CreateInitialSolution(ip, otn, ipOtn,
                 vnodeOrder);
-        System.out.println(vn);
-        solution = cis.getInitialSolution(vn, locationConstraints);
+        Solutions solution = cis.getInitialSolution(vn, locationConstraints);
         this.solutions.set(solutionIndex, solution);
     }
 }
