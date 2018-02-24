@@ -130,7 +130,7 @@ public class Driver {
                     linkCost = 1;
                 // System.out.println("VL bw = " + bw + "; IP Link Cost = "
                 //         + linkCost + "\n");
-                // cost += (bw * linkCost);
+                cost += (bw * linkCost);
             }
         }
 
@@ -146,7 +146,7 @@ public class Driver {
                         link.getDestination() - offset, link.getOrder());
                 // System.out.println("IP bw = " + bw + "; OTN Link Cost = "
                 //         + linkCost + "\n");
-                // cost += (bw * linkCost);
+                cost += (bw * linkCost);
             }
         }
 
