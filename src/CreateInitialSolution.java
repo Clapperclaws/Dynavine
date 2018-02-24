@@ -68,21 +68,22 @@ public class CreateInitialSolution {
             Solutions sol = execute(vn, locationConstraints, listOrder);           
             if (sol.getStatus() == "Success") {
                 long cost = GetSolutionCost(sol, vn);
-                System.out.println("Iter = " + Integer.toString(iter)
-                        + ": Current cost = " + Long.toString(cost) + "\n");
+                // System.out.println("Iter = " + Integer.toString(iter)
+                //         + ": Current cost = " + Long.toString(cost) + "\n");
                 if (cost < bestCost) {
                     bestCost = cost;
                     bestSolution = sol;
                 }
-                System.out.println("Iter = " + Integer.toString(iter)
-                        + ": Current best cost = " + Long.toString(bestCost)
-                        + "\n");
+                // System.out.println("Iter = " + Integer.toString(iter)
+                //         + ": Current best cost = " + Long.toString(bestCost)
+                //         + "\n");
             } else if (sol.getStatus() == "Invalid Input") {
                 return sol;
-            } else {
-                System.out.println("Iter = " + Integer.toString(iter)
-                        + ": no success!!\n");
-            }
+            } 
+            // else {
+            //     System.out.println("Iter = " + Integer.toString(iter)
+            //             + ": no success!!\n");
+            // }
             resetCollapsedGraph(sol);
             ++iter;
         } while (iter < k);
@@ -133,7 +134,7 @@ public class CreateInitialSolution {
 
         // This counter will be used to set the ID of newly create metanodes
         int counter = otnNodesSize + ipNodesSize;
-        System.out.println(order);
+        // System.out.println(order);
         // 1- For each node in N
         for (int i = 0; i < order.size(); i++) {
             // Restart Counter.
@@ -148,7 +149,7 @@ public class CreateInitialSolution {
                 continue; // Skip this node
 
             //Print Start Node
-            System.out.println("Start Node: " + startNode);
+            // System.out.println("Start Node: " + startNode);
 
             // Randomly select a node from location constraint set that is not
             // occupied. However, if the vnode is already placed use it's
@@ -167,7 +168,7 @@ public class CreateInitialSolution {
                 int sourceLocIdx = gn.nextInt(candidates.size());
                 sourceLoc = candidates.get(sourceLocIdx);
             }
-            System.out.println("Source Node " + sourceLoc);
+            // System.out.println("Source Node " + sourceLoc);
 
             // 3- Create Metanodes for source's neighbors
             ArrayList<Integer> metaNodes = new ArrayList<Integer>();
@@ -241,7 +242,7 @@ public class CreateInitialSolution {
             }
             // 4- Connect all Meta Nodes to a single Sink Node
             int sink = counter;
-            System.out.println("Sink Node " + sink);
+            // System.out.println("Sink Node " + sink);
             collapsedGraph.addEndPointList(counter, new ArrayList<EndPoint>());
             for (int j = 0; j < metaNodes.size(); j++) {
                 EndPoint sinkMetaNode = new EndPoint(counter, 1, 1,
@@ -287,14 +288,14 @@ public class CreateInitialSolution {
 
             // Could not find sufficient paths; Embedding failed.
             if (embeddingPaths == null) {
-                System.out.println("Link embedding failed!");
+                // System.out.println("Link embedding failed!");
                 cleanAllMetaNodeLink();
                 return sol;
             }
 
             if (embeddingPaths.size() < vLinksToEmbed.size()) {
-                System.out.println(
-                        "Insufficient number of paths to embed all adjacent virtual links.");
+                // System.out.println(
+                //         "Insufficient number of paths to embed all adjacent virtual links.");
                 cleanAllMetaNodeLink();
                 return sol;
             }
@@ -353,7 +354,7 @@ public class CreateInitialSolution {
             aggregateSolution(vn, embdSol, sol);
             cleanAllMetaNodeLink();
         }
-        System.out.println("Solution :" + sol);
+        // System.out.println("Solution :" + sol);
         for (int i = 0; i < vn.getNodeCount(); ++i) {
             if (!sol.vnIp.isNodeSettled(i, vn.getAdjList().get(i).size())) {
                 cleanAllMetaNodeLink();
@@ -515,8 +516,8 @@ public class CreateInitialSolution {
         ArrayList<Tuple> newIps = sol.getNewIpLinks();
         for (int i = 0; i < newIps.size(); ++i) {
             Tuple link = newIps.get(i);
-            System.out.println("Removing IP link (" + link.getSource() + ", "
-                    + link.getDestination() + "," + link.getOrder() + ")");
+            // System.out.println("Removing IP link (" + link.getSource() + ", "
+            //         + link.getDestination() + "," + link.getOrder() + ")");
             int bw = collapsedGraph.getBW(link.getSource(),
                     link.getDestination(), link.getOrder());
 
@@ -667,7 +668,7 @@ public class CreateInitialSolution {
 
             // We now push minCap units of flow through the augmenting path.
             // Update the residual capacities and flow matrix accordingly.
-            System.out.println(path);
+            // System.out.println(path);
             for (int i = 0; i < path.size(); ++i) {
                 Tuple link = path.get(i);
                 capacity[link.getSource()][link.getDestination()][link
@@ -694,9 +695,9 @@ public class CreateInitialSolution {
         // If maximum flow is less than the number of links to be embedded this
         // means that embedding has failed.
         if (maxFlow < N - 1) {
-            System.out.println("Cannot find sufficient paths between " + source
-                    + " and " + sink + "; Maxflow = " + maxFlow
-                    + ", required flow = " + (N));
+            // System.out.println("Cannot find sufficient paths between " + source
+            //         + " and " + sink + "; Maxflow = " + maxFlow
+            //         + ", required flow = " + (N));
             return null;
         }
 
