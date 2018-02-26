@@ -77,7 +77,7 @@ public class OverlayMapping {
 
     public boolean isNodeSettled(int nodeId, int requiredLinks) {
         if (nodeMapping[nodeId] == -1) {
-            System.out.println(nodeId + " is not mapped!");
+            // System.out.println(nodeId + " is not mapped!");
             return false;
         }
         int settledLinks = 0;

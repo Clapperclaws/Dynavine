@@ -94,7 +94,7 @@ public class CreateInitialSolution {
         // return sol;
         System.out.println(
                 "Best solution cost = " + Long.toString(bestCost) + "\n");
-        System.out.println(bestSolution);
+        // System.out.println(bestSolution);
         return bestSolution;
     }
 
