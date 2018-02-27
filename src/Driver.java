@@ -112,7 +112,7 @@ public class Driver {
                 + Long.toString(elapsedTime % 1000000000) + "\n");
         bw.close();
         fw.close();
-        /*
+        
         HashMap<Tuple, Integer> linkUsage = new HashMap<Tuple, Integer>();
         for (Tuple vlink : solution.getVnIp().linkMapping.keySet()) {
             ArrayList<Tuple> ipPath = solution.getVnIp().getLinkMapping(vlink);
@@ -137,11 +137,14 @@ public class Driver {
         for (Tuple ipLink : linkUsage.keySet()) {
             int b = ip.getBW(ipLink.getSource(), ipLink.getDestination(),
                     ipLink.getOrder());
-            int u = linkUsage.get(ipLink);
-            if (u > b) {
-                System.out.print(ipLink + ": used = " + u + ", cap = " + b);
+            if (b == -1) {
+                b = Math.min(
+                        ip.getPortCapacity()[ipLink.getSource()],
+                        ip.getPortCapacity()[ipLink.getDestination()]);
             }
-        }*/
+            int u = linkUsage.get(ipLink);
+            System.out.print(ipLink + ": used = " + u + ", cap = " + b);            
+        }
     }
 
     private static void WriteSolutionCostToFile(Solutions solution, Graph vn,
