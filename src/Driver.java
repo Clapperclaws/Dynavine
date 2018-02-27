@@ -51,15 +51,15 @@ public class Driver {
         // Read IP Ports and Port Capacities
         ReadPortAttributes(parsedArgs.get("--ip_port_info_file"), ip);
         // for (int i = 0; i < ip.getPorts().length; i++)
-        //     System.out.println("Node " + i + " has " + ip.getPorts()[i]
-        //             + " ports each of capacity " + ip.getPortCapacity()[i]);
+        // System.out.println("Node " + i + " has " + ip.getPorts()[i]
+        // + " ports each of capacity " + ip.getPortCapacity()[i]);
 
         // 3- Map IP to OTN
         OverlayMapping ipOtn = ReadOverlayMapping(ip.getAdjList().size(),
                 parsedArgs.get("--ip_node_mapping_file"),
                 parsedArgs.get("--ip_link_mapping_file"));
         // System.out.println(
-        //         "******* IP to OTN Overlay Mapping: ******* \n" + ipOtn);
+        // "******* IP to OTN Overlay Mapping: ******* \n" + ipOtn);
 
         // 4- Initialize VN Graph
         vnLinks = new ArrayList<Tuple>();
@@ -73,10 +73,10 @@ public class Driver {
         ArrayList<Integer> locationConstraints[] = ReadLocationConstraints(
                 parsedArgs.get("--vn_location_file"), vn.getAdjList().size());
         // for (int i = 0; i < locationConstraints.length; i++) {
-            // System.out.println("Location Constraints of node " + i);
-            // for (int j = 0; j < locationConstraints[i].size(); j++)
-                // System.out.print(locationConstraints[i].get(j) + ",");
-            // System.out.println();
+        // System.out.println("Location Constraints of node " + i);
+        // for (int j = 0; j < locationConstraints[i].size(); j++)
+        // System.out.print(locationConstraints[i].get(j) + ",");
+        // System.out.println();
         // }
 
         // 6- Get Initial Solution
@@ -112,6 +112,36 @@ public class Driver {
                 + Long.toString(elapsedTime % 1000000000) + "\n");
         bw.close();
         fw.close();
+
+        HashMap<Tuple, Integer> linkUsage = new HashMap<Tuple, Integer>();
+        for (Tuple vlink : solution.getVnIp().linkMapping.keySet()) {
+            ArrayList<Tuple> ipPath = solution.getVnIp().getLinkMapping(vlink);
+            for (Tuple ipLink : ipPath) {
+                Tuple key = null;
+                if (ipLink.getSource() > ipLink.getDestination()) {
+                    key = new Tuple(ipLink.getOrder(), ipLink.getDestination(),
+                            ipLink.getSource());
+                } else {
+                    key = new Tuple(ipLink.getOrder(), ipLink.getSource(),
+                            ipLink.getDestination());
+                }
+                int prevb = 0;
+                if (linkUsage.containsKey(key)) {
+                    prevb = linkUsage.get(key).intValue();
+                }
+                int b = ip.getBW(ipLink.getSource(), ipLink.getDestination(),
+                        ipLink.getOrder());
+                linkUsage.put(key, prevb + b);
+            }
+        }
+        for (Tuple ipLink : linkUsage.keySet()) {
+            int b = ip.getBW(ipLink.getSource(), ipLink.getDestination(),
+                    ipLink.getOrder());
+            int u = linkUsage.get(ipLink);
+            if (u > b) {
+                System.out.print(ipLink + ": used = " + u + ", cap = " + b);
+            }
+        }
     }
 
     private static void WriteSolutionCostToFile(Solutions solution, Graph vn,
@@ -129,7 +159,7 @@ public class Driver {
                 if (linkCost == -1)
                     linkCost = 1;
                 // System.out.println("VL bw = " + bw + "; IP Link Cost = "
-                //         + linkCost + "\n");
+                // + linkCost + "\n");
                 cost += (bw * linkCost);
             }
         }
@@ -145,7 +175,7 @@ public class Driver {
                 int linkCost = otn.getCost(link.getSource() - offset,
                         link.getDestination() - offset, link.getOrder());
                 // System.out.println("IP bw = " + bw + "; OTN Link Cost = "
-                //         + linkCost + "\n");
+                // + linkCost + "\n");
                 cost += (bw * linkCost);
             }
         }
