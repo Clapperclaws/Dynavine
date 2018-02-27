@@ -728,7 +728,10 @@ public class CreateInitialSolution {
             System.out.println("Link " + t + " is part of "
                     + linkToPathMap.get(t).size() + " paths");
             int req = linkToPathMap.get(t).size() * maxLinkCap;
-            System.out.println("Link " + t + " needs >= " + req);
+            int has = collapsedGraph.getBW(t.getSource(), t.getDestination(),
+                    t.getOrder());
+            System.out.println(
+                    "Link " + t + " needs >= " + req + ", has = " + has);
             System.out.println(
                     capacity[t.getSource()][t.getDestination()][t.getOrder()]);
         }
