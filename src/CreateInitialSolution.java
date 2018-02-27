@@ -554,32 +554,31 @@ public class CreateInitialSolution {
             int srcIndex = collapsedGraph.getNodeIndex(dst, src,
                     path.get(k).getOrder());
 
+            int prevb = collapsedGraph.getAdjList().get(src).get(dstIndex)
+                    .getBw();
+            int curb = collapsedGraph.getAdjList().get(src).get(dstIndex)
+                    .getBw() - bw;
             // Update BW Capacity for the first edge
             collapsedGraph.getAdjList().get(src).get(dstIndex).setBw(
                     collapsedGraph.getAdjList().get(src).get(dstIndex).getBw()
                             - bw);
-
+            if (curb < 0) {
+                System.out.println("Violating capacity constraint...current = "
+                        + curb + ", prev = " + prevb + " (" + path.get(k)
+                        + ")");
+            }
             // Update BW Capacity for the second edge
             collapsedGraph.getAdjList().get(dst).get(srcIndex).setBw(
                     collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw()
                             - bw);
-            if (collapsedGraph.getAdjList().get(src).get(dstIndex)
-                    .getBw() < 0) {
+
+            prevb = collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw();
+            curb = collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw()
+                    - bw;
+            if (curb < 0) {
                 System.out.println("Violating capacity constraint...current = "
-                        + collapsedGraph.getAdjList().get(src).get(dstIndex)
-                                .getBw()
-                        + ", prev = " + collapsedGraph.getAdjList().get(src)
-                                .get(dstIndex).getBw()
-                        + bw + ", bw = " + bw);
-            }
-            if (collapsedGraph.getAdjList().get(dst).get(srcIndex)
-                    .getBw() < 0) {
-                System.out.println("Violating capacity constraint...current = "
-                        + collapsedGraph.getAdjList().get(dst).get(srcIndex)
-                                .getBw()
-                        + ", prev = " + collapsedGraph.getAdjList().get(dst)
-                                .get(srcIndex).getBw()
-                        + bw + ", bw = " + bw);
+                        + curb + ", prev = " + prevb + " (" + path.get(k)
+                        + ")");
             }
         }
     }

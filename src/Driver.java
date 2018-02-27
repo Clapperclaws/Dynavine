@@ -327,7 +327,6 @@ public class Driver {
                                                                    // Graph with
                                                                    // the number
                                                                    // of Nodes
-
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             if (line != null) {
@@ -342,10 +341,14 @@ public class Driver {
                         Integer.parseInt(splitLine[2]),
                         Integer.parseInt(splitLine[3]), graphType, 0);
                 g.addEndPoint(Integer.parseInt(splitLine[0]), ep1);
+                if(ep1.getBw() < 0) 
+                    System.out.println("Negative bandwidth in input: " + ep1);
                 EndPoint ep2 = new EndPoint(Integer.parseInt(splitLine[0]),
                         Integer.parseInt(splitLine[2]),
                         Integer.parseInt(splitLine[3]), graphType, 0);
                 g.addEndPoint(Integer.parseInt(splitLine[1]), ep2);
+                if(ep2.getBw() < 0) 
+                    System.out.println("Negative bandwidth in input: " + ep2);
             }
         }
         return g;
