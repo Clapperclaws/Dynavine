@@ -563,11 +563,23 @@ public class CreateInitialSolution {
             collapsedGraph.getAdjList().get(dst).get(srcIndex).setBw(
                     collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw()
                             - bw);
-            if(collapsedGraph.getAdjList().get(src).get(dstIndex).getBw() < 0) {
-                System.out.println("Violating capacity constraint.");
+            if (collapsedGraph.getAdjList().get(src).get(dstIndex)
+                    .getBw() < 0) {
+                System.out.println("Violating capacity constraint...current = "
+                        + collapsedGraph.getAdjList().get(src).get(dstIndex)
+                                .getBw()
+                        + ", prev = " + collapsedGraph.getAdjList().get(src)
+                                .get(dstIndex).getBw()
+                        + bw);
             }
-            if(collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw() < 0) {
-                System.out.println("Violating capacity constraint.");
+            if (collapsedGraph.getAdjList().get(dst).get(srcIndex)
+                    .getBw() < 0) {
+                System.out.println("Violating capacity constraint...current = "
+                        + collapsedGraph.getAdjList().get(dst).get(srcIndex)
+                                .getBw()
+                        + ", prev = " + collapsedGraph.getAdjList().get(dst)
+                                .get(srcIndex).getBw()
+                        + bw);
             }
         }
     }
