@@ -56,7 +56,6 @@ public class CreateInitialSolution {
         Solutions bestSolution = null;
         long bestCost = Integer.MAX_VALUE;
         do {
-
             // 1- Get a new list order
             ArrayList<Integer> listOrder = getListOrder(vn);
 
@@ -196,7 +195,6 @@ public class CreateInitialSolution {
 
                 if (vendPoint.getBw() > maxLinkCap)// Adjust maxLinkCap
                     maxLinkCap = vendPoint.getBw();
-                System.out.println("maxLinkCap = " + maxLinkCap);    
                 // Create an Adjacency vector for the meta-node of each
                 // neighboring node
                 collapsedGraph.addEndPointList(counter, // Add the meta-node to
@@ -241,6 +239,7 @@ public class CreateInitialSolution {
                 sol.setStatus("Invalid Input");
                 return sol;
             }
+            System.out.println("maxLinkCap = " + maxLinkCap);
             // 4- Connect all Meta Nodes to a single Sink Node
             int sink = counter;
             // System.out.println("Sink Node " + sink);
@@ -645,10 +644,13 @@ public class CreateInitialSolution {
                 } else {
                     capacity[i][endPoint.getNodeId()][endPoint
                             .getOrder()] = endPoint.getBw() / maxLinkCap;
-                    if (capacity[i][endPoint.getNodeId()][endPoint
-                            .getOrder()] < 0) {
-                        System.out.println("Invalid cap in maxflow.");
-                    }
+                    System.out.println(
+                            endPoint + "----maxLinkCap = " + maxLinkCap);
+                    System.out.println(
+                            "capacity[" + i + "][" + endPoint.getNodeId() + "]["
+                                    + endPoint.getOrder() + "] = "
+                                    + capacity[i][endPoint.getNodeId()][endPoint
+                                            .getOrder()]);
                 }
             }
         }
