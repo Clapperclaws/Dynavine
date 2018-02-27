@@ -196,7 +196,7 @@ public class CreateInitialSolution {
 
                 if (vendPoint.getBw() > maxLinkCap)// Adjust maxLinkCap
                     maxLinkCap = vendPoint.getBw();
-
+                System.out.println("maxLinkCap = " + maxLinkCap);    
                 // Create an Adjacency vector for the meta-node of each
                 // neighboring node
                 collapsedGraph.addEndPointList(counter, // Add the meta-node to
@@ -556,16 +556,15 @@ public class CreateInitialSolution {
 
             int prevb = collapsedGraph.getAdjList().get(src).get(dstIndex)
                     .getBw();
-            int curb = collapsedGraph.getAdjList().get(src).get(dstIndex)
-                    .getBw() - bw;
+            int curb = prevb - bw;
             // Update BW Capacity for the first edge
             collapsedGraph.getAdjList().get(src).get(dstIndex).setBw(
                     collapsedGraph.getAdjList().get(src).get(dstIndex).getBw()
                             - bw);
             if (curb < 0) {
-                System.out.println("Violating capacity constraint...current = "
-                        + curb + ", prev = " + prevb + " (" + path.get(k)
-                        + ")");
+                System.out.println("Violating capacity constraint...bw = " + bw
+                        + ", current = " + curb + ", prev = " + prevb + " "
+                        + path.get(k));
             }
             // Update BW Capacity for the second edge
             collapsedGraph.getAdjList().get(dst).get(srcIndex).setBw(
@@ -573,14 +572,14 @@ public class CreateInitialSolution {
                             - bw);
 
             prevb = collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw();
-            curb = collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw()
-                    - bw;
+            curb = prevb - bw;
             if (curb < 0) {
-                System.out.println("Violating capacity constraint...current = "
-                        + curb + ", prev = " + prevb + " (" + path.get(k)
-                        + ")");
+                System.out.println("Violating capacity constraint...bw = " + bw
+                        + ", current = " + curb + ", prev = " + prevb + " "
+                        + path.get(k));
             }
         }
+        System.out.println("");
     }
 
     // Returns a shuffled order of VN nodes
@@ -646,6 +645,10 @@ public class CreateInitialSolution {
                 } else {
                     capacity[i][endPoint.getNodeId()][endPoint
                             .getOrder()] = endPoint.getBw() / maxLinkCap;
+                    if (capacity[i][endPoint.getNodeId()][endPoint
+                            .getOrder()] < 0) {
+                        System.out.println("Invalid cap in maxflow.");
+                    }
                 }
             }
         }

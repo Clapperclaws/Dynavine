@@ -112,8 +112,9 @@ public class Driver {
                 + Long.toString(elapsedTime % 1000000000) + "\n");
         bw.close();
         fw.close();
-        
+
         HashMap<Tuple, Integer> linkUsage = new HashMap<Tuple, Integer>();
+        HashMap<Tuple, ArrayList<Tuple>> revMap = new HashMap<Tuple, ArrayList<Tuple>>();
         for (Tuple vlink : solution.getVnIp().linkMapping.keySet()) {
             int b = vn.getBW(vlink.getSource(), vlink.getDestination(),
                     vlink.getOrder());
@@ -129,21 +130,24 @@ public class Driver {
                 }
                 int prevb = 0;
                 if (linkUsage.containsKey(key)) {
-                    prevb = linkUsage.get(key).intValue();
+                    prevb = linkUsage.get(key).intValue();                    
+                } else {
+                    revMap.put(key, new ArrayList<Tuple>());
                 }
                 linkUsage.put(key, prevb + b);
+                revMap.get(key).add(vlink);
             }
         }
         for (Tuple ipLink : linkUsage.keySet()) {
             int b = ip.getBW(ipLink.getSource(), ipLink.getDestination(),
                     ipLink.getOrder());
             if (b == -1) {
-                b = Math.min(
-                        ip.getPortCapacity()[ipLink.getSource()],
+                b = Math.min(ip.getPortCapacity()[ipLink.getSource()],
                         ip.getPortCapacity()[ipLink.getDestination()]);
             }
             int u = linkUsage.get(ipLink);
-            System.out.println(ipLink + ": used = " + u + ", cap = " + b);            
+            System.out.println(ipLink + ": used = " + u + ", cap = " + b);
+            System.out.println(ipLink + "--> " + revMap.get(ipLink));
         }
     }
 
@@ -341,13 +345,13 @@ public class Driver {
                         Integer.parseInt(splitLine[2]),
                         Integer.parseInt(splitLine[3]), graphType, 0);
                 g.addEndPoint(Integer.parseInt(splitLine[0]), ep1);
-                if(ep1.getBw() < 0) 
+                if (ep1.getBw() < 0)
                     System.out.println("Negative bandwidth in input: " + ep1);
                 EndPoint ep2 = new EndPoint(Integer.parseInt(splitLine[0]),
                         Integer.parseInt(splitLine[2]),
                         Integer.parseInt(splitLine[3]), graphType, 0);
                 g.addEndPoint(Integer.parseInt(splitLine[1]), ep2);
-                if(ep2.getBw() < 0) 
+                if (ep2.getBw() < 0)
                     System.out.println("Negative bandwidth in input: " + ep2);
             }
         }
