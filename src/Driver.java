@@ -115,6 +115,8 @@ public class Driver {
         
         HashMap<Tuple, Integer> linkUsage = new HashMap<Tuple, Integer>();
         for (Tuple vlink : solution.getVnIp().linkMapping.keySet()) {
+            int b = vn.getBW(vlink.getSource(), vlink.getDestination(),
+                    vlink.getOrder());
             ArrayList<Tuple> ipPath = solution.getVnIp().getLinkMapping(vlink);
             for (Tuple ipLink : ipPath) {
                 Tuple key = null;
@@ -129,8 +131,6 @@ public class Driver {
                 if (linkUsage.containsKey(key)) {
                     prevb = linkUsage.get(key).intValue();
                 }
-                int b = ip.getBW(ipLink.getSource(), ipLink.getDestination(),
-                        ipLink.getOrder());
                 linkUsage.put(key, prevb + b);
             }
         }
