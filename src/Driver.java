@@ -143,7 +143,7 @@ public class Driver {
                         ip.getPortCapacity()[ipLink.getDestination()]);
             }
             int u = linkUsage.get(ipLink);
-            System.out.print(ipLink + ": used = " + u + ", cap = " + b);            
+            System.out.println(ipLink + ": used = " + u + ", cap = " + b);            
         }
     }
 
