@@ -112,7 +112,7 @@ public class Driver {
                 + Long.toString(elapsedTime % 1000000000) + "\n");
         bw.close();
         fw.close();
-
+        /*
         HashMap<Tuple, Integer> linkUsage = new HashMap<Tuple, Integer>();
         for (Tuple vlink : solution.getVnIp().linkMapping.keySet()) {
             ArrayList<Tuple> ipPath = solution.getVnIp().getLinkMapping(vlink);
@@ -141,7 +141,7 @@ public class Driver {
             if (u > b) {
                 System.out.print(ipLink + ": used = " + u + ", cap = " + b);
             }
-        }
+        }*/
     }
 
     private static void WriteSolutionCostToFile(Solutions solution, Graph vn,
