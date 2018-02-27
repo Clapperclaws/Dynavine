@@ -451,7 +451,6 @@ public class CreateInitialSolution {
                 // Case of OTN -> IP
                 if ((dst >= 0 && dst < ipNodesSize) && src >= ipNodesSize
                         && src < (otnNodesSize + ipNodesSize)) {
-
                     // Add the OTN src as the Node embedding of the IP dst.
                     sol.ipOtn.nodeMapping[dst] = src;
                     dstIP = dst;
@@ -644,13 +643,13 @@ public class CreateInitialSolution {
                 } else {
                     capacity[i][endPoint.getNodeId()][endPoint
                             .getOrder()] = endPoint.getBw() / maxLinkCap;
-                    System.out.println(
-                            endPoint + "----maxLinkCap = " + maxLinkCap);
-                    System.out.println(
-                            "capacity[" + i + "][" + endPoint.getNodeId() + "]["
-                                    + endPoint.getOrder() + "] = "
-                                    + capacity[i][endPoint.getNodeId()][endPoint
-                                            .getOrder()]);
+                    // System.out.println(
+                    // endPoint + "----maxLinkCap = " + maxLinkCap);
+                    // System.out.println(
+                    // "capacity[" + i + "][" + endPoint.getNodeId() + "]["
+                    // + endPoint.getOrder() + "] = "
+                    // + capacity[i][endPoint.getNodeId()][endPoint
+                    // .getOrder()]);
                 }
             }
         }
@@ -725,7 +724,14 @@ public class CreateInitialSolution {
             // + ", required flow = " + (N));
             return null;
         }
-
+        for (Tuple t : linkToPathMap.keySet()) {
+            System.out.println("Link " + t + " is part of "
+                    + linkToPathMap.get(t).size() + " paths");
+            System.out.print("Link " + t + " needs >= "
+                    + linkToPathMap.size() * maxLinkCap);
+            System.out.print(
+                    capacity[t.getSource()][t.getDestination()][t.getOrder()]);
+        }
         // Construct flow paths from augmenting paths. The algorithm is as
         // follows: If augmenting path a and b contains links (u, v) and (v, u),
         // respectively, then it means flow along (u, v) is cancelled by b by
