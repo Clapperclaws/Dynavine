@@ -338,18 +338,20 @@ public class Driver {
                 // the second node; 2: bandwidth
                 String[] splitLine = line.split(",");
                 // Create Tuple for this link
-                links.add(new Tuple(0, Integer.parseInt(splitLine[0]),
-                        Integer.parseInt(splitLine[1])));
+                int src = Integer.parseInt(splitLine[0]);
+                int dst = Integer.parseInt(splitLine[1]);
+                int order = g.findTupleOrder(src, dst);
+                links.add(new Tuple(order,src,dst));
                 // Create two end points
                 EndPoint ep1 = new EndPoint(Integer.parseInt(splitLine[1]),
                         Integer.parseInt(splitLine[2]),
-                        Integer.parseInt(splitLine[3]), graphType, 0);
+                        Integer.parseInt(splitLine[3]), graphType, order);
                 g.addEndPoint(Integer.parseInt(splitLine[0]), ep1);
                 if (ep1.getBw() < 0)
                     System.out.println("Negative bandwidth in input: " + ep1);
                 EndPoint ep2 = new EndPoint(Integer.parseInt(splitLine[0]),
                         Integer.parseInt(splitLine[2]),
-                        Integer.parseInt(splitLine[3]), graphType, 0);
+                        Integer.parseInt(splitLine[3]), graphType, order);
                 g.addEndPoint(Integer.parseInt(splitLine[1]), ep2);
                 if (ep2.getBw() < 0)
                     System.out.println("Negative bandwidth in input: " + ep2);
