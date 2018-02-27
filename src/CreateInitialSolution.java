@@ -570,7 +570,7 @@ public class CreateInitialSolution {
                                 .getBw()
                         + ", prev = " + collapsedGraph.getAdjList().get(src)
                                 .get(dstIndex).getBw()
-                        + bw);
+                        + bw + ", bw = " + bw);
             }
             if (collapsedGraph.getAdjList().get(dst).get(srcIndex)
                     .getBw() < 0) {
@@ -579,7 +579,7 @@ public class CreateInitialSolution {
                                 .getBw()
                         + ", prev = " + collapsedGraph.getAdjList().get(dst)
                                 .get(srcIndex).getBw()
-                        + bw);
+                        + bw + ", bw = " + bw);
             }
         }
     }
