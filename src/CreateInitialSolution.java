@@ -761,6 +761,7 @@ public class CreateInitialSolution {
             }
             flowPaths.add(tentativeFlowPath);
         }
+        System.out.println(flowPaths);
         return flowPaths;
     }
 }
