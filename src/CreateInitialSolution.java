@@ -65,24 +65,24 @@ public class CreateInitialSolution {
 
             // 2- Execute the function that performs the VN Nodes & Links
             // embedding
-            Solutions sol = execute(vn, locationConstraints, listOrder);           
+            Solutions sol = execute(vn, locationConstraints, listOrder);
             if (sol.getStatus() == "Success") {
                 long cost = GetSolutionCost(sol, vn);
                 // System.out.println("Iter = " + Integer.toString(iter)
-                //         + ": Current cost = " + Long.toString(cost) + "\n");
+                // + ": Current cost = " + Long.toString(cost) + "\n");
                 if (cost < bestCost) {
                     bestCost = cost;
                     bestSolution = sol;
                 }
                 // System.out.println("Iter = " + Integer.toString(iter)
-                //         + ": Current best cost = " + Long.toString(bestCost)
-                //         + "\n");
+                // + ": Current best cost = " + Long.toString(bestCost)
+                // + "\n");
             } else if (sol.getStatus() == "Invalid Input") {
                 return sol;
-            } 
+            }
             // else {
-            //     System.out.println("Iter = " + Integer.toString(iter)
-            //             + ": no success!!\n");
+            // System.out.println("Iter = " + Integer.toString(iter)
+            // + ": no success!!\n");
             // }
             resetCollapsedGraph(sol);
             ++iter;
@@ -143,12 +143,12 @@ public class CreateInitialSolution {
             // Get the index of the first node in the list.
             int startNode = order.get(i);
 
-            //Check if the node is settled            
+            // Check if the node is settled
             if (sol.vnIp.isNodeSettled(startNode,
                     vn.getAdjList().get(startNode).size()))
                 continue; // Skip this node
 
-            //Print Start Node
+            // Print Start Node
             // System.out.println("Start Node: " + startNode);
 
             // Randomly select a node from location constraint set that is not
@@ -156,7 +156,7 @@ public class CreateInitialSolution {
             // original node embedding.
             int sourceLoc = sol.vnIp.getNodeMapping(startNode);
             if (sourceLoc == -1) {
-                ArrayList <Integer> candidates = new ArrayList<Integer>();
+                ArrayList<Integer> candidates = new ArrayList<Integer>();
                 for (Integer location : locationConstraints[startNode]) {
                     if (!sol.vnIp.isOccupied(location.intValue()))
                         candidates.add(location);
@@ -172,34 +172,35 @@ public class CreateInitialSolution {
 
             // 3- Create Metanodes for source's neighbors
             ArrayList<Integer> metaNodes = new ArrayList<Integer>();
-            int[] vNodeToMetaNodeMap = new int[vn.getNodeCount()]; //??
-            Arrays.fill(vNodeToMetaNodeMap, -1); //??
-            
+            int[] vNodeToMetaNodeMap = new int[vn.getNodeCount()]; // ??
+            Arrays.fill(vNodeToMetaNodeMap, -1); // ??
+
             int maxLinkCap = 0;
             ArrayList<Tuple> vLinksToEmbed = new ArrayList<Tuple>();
-            
-            //For every adjacent node to the Start Node
+
+            // For every adjacent node to the Start Node
             ArrayList<EndPoint> adjList = vn.getAdjList().get(startNode);
             for (int j = 0; j < adjList.size(); j++) {
                 EndPoint vendPoint = adjList.get(j);
                 if (sol.vnIp.isNodeSettled(vendPoint.getNodeId(),
                         vn.getAdjList().get(vendPoint.getNodeId()).size()))
                     continue; // Skip this node
-                
-                //Add the startNode-vendPoint to the list of Vlinks to map
+
+                // Add the startNode-vendPoint to the list of Vlinks to map
                 vLinksToEmbed.add(new Tuple(vendPoint.getOrder(), startNode,
                         vendPoint.getNodeId()));
-                
+
                 // Add to list of Meta Nodes
-                metaNodes.add(counter); //Create a New Meta Node
-                vNodeToMetaNodeMap[vendPoint.getNodeId()] = counter; //?
-                
-                if (vendPoint.getBw() > maxLinkCap)//Adjust maxLinkCap
+                metaNodes.add(counter); // Create a New Meta Node
+                vNodeToMetaNodeMap[vendPoint.getNodeId()] = counter; // ?
+
+                if (vendPoint.getBw() > maxLinkCap)// Adjust maxLinkCap
                     maxLinkCap = vendPoint.getBw();
 
                 // Create an Adjacency vector for the meta-node of each
                 // neighboring node
-                collapsedGraph.addEndPointList(counter, //Add the meta-node to the collapsedGraph
+                collapsedGraph.addEndPointList(counter, // Add the meta-node to
+                                                        // the collapsedGraph
                         new ArrayList<EndPoint>());
 
                 // a- Check if the node is not mapped
@@ -295,7 +296,8 @@ public class CreateInitialSolution {
 
             if (embeddingPaths.size() < vLinksToEmbed.size()) {
                 // System.out.println(
-                //         "Insufficient number of paths to embed all adjacent virtual links.");
+                // "Insufficient number of paths to embed all adjacent virtual
+                // links.");
                 cleanAllMetaNodeLink();
                 return sol;
             }
@@ -465,7 +467,6 @@ public class CreateInitialSolution {
                             sol.vnIp.linkMapping.get((Tuple) pair.getKey())
                                     .add(sol.getNewIpLinks().get(index));
                     } else {
-
                         // Find the order of the new IP Link
                         int tupleOrder = collapsedGraph.findTupleOrder(srcIP,
                                 dstIP);
@@ -480,7 +481,8 @@ public class CreateInitialSolution {
                         sol.vnIp.linkMapping.get((Tuple) pair.getKey())
                                 .add(ipTup);
 
-                        // Get Bandwidth Capacity of new IP Link
+                        // Get Bandwidth Capacity of new IP Link. Remember to
+                        // offset the bandwidth of current vlink.
                         int newIPLinkCap = Math.min(
                                 collapsedGraph.getPortCapacity()[srcIP],
                                 collapsedGraph.getPortCapacity()[dstIP]);
@@ -517,7 +519,7 @@ public class CreateInitialSolution {
         for (int i = 0; i < newIps.size(); ++i) {
             Tuple link = newIps.get(i);
             // System.out.println("Removing IP link (" + link.getSource() + ", "
-            //         + link.getDestination() + "," + link.getOrder() + ")");
+            // + link.getDestination() + "," + link.getOrder() + ")");
             int bw = collapsedGraph.getBW(link.getSource(),
                     link.getDestination(), link.getOrder());
 
@@ -561,6 +563,12 @@ public class CreateInitialSolution {
             collapsedGraph.getAdjList().get(dst).get(srcIndex).setBw(
                     collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw()
                             - bw);
+            if(collapsedGraph.getAdjList().get(src).get(dstIndex).getBw() < 0) {
+                System.out.println("Violating capacity constraint.");
+            }
+            if(collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw() < 0) {
+                System.out.println("Violating capacity constraint.");
+            }
         }
     }
 
@@ -695,9 +703,10 @@ public class CreateInitialSolution {
         // If maximum flow is less than the number of links to be embedded this
         // means that embedding has failed.
         if (maxFlow < N - 1) {
-            // System.out.println("Cannot find sufficient paths between " + source
-            //         + " and " + sink + "; Maxflow = " + maxFlow
-            //         + ", required flow = " + (N));
+            // System.out.println("Cannot find sufficient paths between " +
+            // source
+            // + " and " + sink + "; Maxflow = " + maxFlow
+            // + ", required flow = " + (N));
             return null;
         }
 
