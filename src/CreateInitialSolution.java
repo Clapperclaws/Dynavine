@@ -727,9 +727,9 @@ public class CreateInitialSolution {
         for (Tuple t : linkToPathMap.keySet()) {
             System.out.println("Link " + t + " is part of "
                     + linkToPathMap.get(t).size() + " paths");
-            System.out.print("Link " + t + " needs >= "
-                    + linkToPathMap.size() * maxLinkCap);
-            System.out.print(
+            int req = linkToPathMap.get(t).size() * maxLinkCap;
+            System.out.println("Link " + t + " needs >= " + req);
+            System.out.println(
                     capacity[t.getSource()][t.getDestination()][t.getOrder()]);
         }
         // Construct flow paths from augmenting paths. The algorithm is as
