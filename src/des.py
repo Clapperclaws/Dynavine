@@ -2,9 +2,10 @@ import argparse
 import heapq
 import networkx as nx
 import os
+import sys
 import re
 import subprocess
-
+from operator import itemgetter
 
 class Event:
     def __init__(self, ts, etype, vn_id):
@@ -70,14 +71,21 @@ def load_csv_graph(topology_file):
     return g
 
 def write_csv_graph(g, topology_file):
+    seen = set()
     with open(topology_file, "w") as f:
         f.write(str(g.number_of_nodes()) + "\n")
         edges = g.edges()
         for edge in edges:
+            if edge in seen:
+                continue
+            seen.add(edge)
             edge_data = g.get_edge_data(edge[0], edge[1])
-            for idx in edge_data.keys():
-                cost = edge_data[idx]['cost']
-                bw = edge_data[idx]['bw']
+            sorted_edge_data = sorted(edge_data.values(), key=itemgetter('order'))
+            # if len(edge_data.keys()) > 1:
+            #     print "Multi link (" + str(edge[0]) + "," + str(edge[1]) + "," + str(len(edge_data.keys())) + ")" 
+            for edata in sorted_edge_data:
+                cost = edata['cost']
+                bw = edata['bw']
                 f.write(",".join([str(edge[0]), str(edge[1]), str(cost), str(bw)]) + "\n")
 
 def write_ip_util_matrix(g, ip_util_matrix, out_file):
@@ -89,6 +97,9 @@ def write_ip_util_matrix(g, ip_util_matrix, out_file):
                     util = float(value / (value + float(v['bw'])))
                     if util > 0:
                         f.write(",".join([str(key[0]), str(key[1]), str(key[2]), str(util)]) + "\n")
+                    if util > 1.0:
+                        print "**** IP RED ALERT ****\n"
+                        sys.exit(1)
                     break
 
 def write_otn_util_matrix(g, otn_util_matrix, out_file):
@@ -97,7 +108,24 @@ def write_otn_util_matrix(g, otn_util_matrix, out_file):
             util = float(value / (value + float(g.get_edge_data(key[0], key[1])[0]['bw'])))
             if util > 0:
                 f.write(",".join([str(key[0]), str(key[1]), str(util)]) + "\n")
+            if util > 1.0:
+                print "**** OTN RED ALERT ****\n"
 
+def write_new_ip_info(new_ip_map_file, out_file):
+    seen = set()
+    with open(new_ip_map_file, "r") as f:
+        for line in f:
+            tokens = line.split(",")
+            u, v, order = int(tokens[0]), int(tokens[1]), int(tokens[2])
+            if u > v:
+                u, v = v, u
+            link = (u, v, order)
+            if link not in seen:
+                seen.add(link)
+    with open(out_file, "w") as f:
+        for link in seen:
+            f.write(",".join([str(link[0]), str(link[1]), str(link[2])]) + "\n")
+     
 def update_ip_topology(ip, new_ip_map_file, ip_util_matrix, port_capacities, num_ports):
     seen = set()
     new_ip_links = []
@@ -114,14 +142,17 @@ def update_ip_topology(ip, new_ip_map_file, ip_util_matrix, port_capacities, num
                 num_ports[u] -= 1
                 num_ports[v] -= 1
                 cost = 1
+		# print "Creating new IP link: (" + str(u) + "," + str(v) + "," + str(order) + "," + str(bw) + ")"
                 ip.add_edge(u, v, bw=bw, cost=cost, order=order)
                 ip_util_matrix[(u, v, order)] = 0
     return ip, port_capacities, num_ports
 
 def write_ip_port_info(ip, num_ports, port_caps, ip_port_info_file):
+    print num_ports
+    print port_caps
     with open(ip_port_info_file, "w") as f:
         for i in range(0, ip.number_of_nodes()):
-            f.write(",".join([str(i), str(num_ports[i]), str(port_caps[i])]))
+            f.write(",".join([str(i), str(num_ports[i]), str(port_caps[i])]) + "\n")
 
 def update_ip_capacity(ip, vn, ip_util_matrix, emap_file, increase = True):
     sign = 1
@@ -135,11 +166,13 @@ def update_ip_capacity(ip, vn, ip_util_matrix, emap_file, increase = True):
                 m, n = n, m
             if u > v:
                 u, v = v, u
+            # print "Updating for mapping: (" + str(m) + "," + str(n) + ") --> (" + str(u) + "," + str(v) + "," + str(order) + ")"
             b_mn = int(vn.get_edge_data(m, n)[0]['bw'])
             for idx in ip.edge[u][v].keys():
                 if ip.edge[u][v][idx]['order'] == order:
                     ip.edge[u][v][idx]['bw'] += (sign * b_mn)
-                    ip_util_matrix[(u, v, order)] += (sign * b_mn)
+                    ip_util_matrix[(u, v, order)] -= (sign * b_mn)
+                    # print "(" + str(u) + "," + str(v) + "," + str(order) + "): " + str(ip_util_matrix[(u, v, order)])
     return ip
 
 def update_otn_capacity(otn, ip, otn_util_matrix, new_ip_map_file):
@@ -214,8 +247,9 @@ def main():
     ip = load_csv_graph(args.ip_topology_file)
     ip_util_matrix = {}
     otn_util_matrix = {}
-    for edge in ip.edges(data="all"):
-        ip_util_matrix[(edge[0], edge[1], edge[2]['order'])] = 0.0
+    for edge in ip.edges():
+	edata = ip.get_edge_data(edge[0], edge[1])
+        ip_util_matrix[(edge[0], edge[1], edata[0]['order'])] = 0.0
 
     for edge in otn.edges():
         otn_util_matrix[(edge[0], edge[1])] = 0.0
@@ -250,8 +284,8 @@ def main():
             vn_location_file = get_full_path(current_directory, 
                                                      args.vnr_directory + "/" +
                                                      e.vn_id + "loc")
-            num_shuffles = 15
-            for i in range(0, 5):
+            num_shuffles = 10
+            for i in range(0, 1):
                 execute_one_experiment(args.executable, otn_topology_file,
                         ip_topology_file, ip_node_mapping_file,
                         ip_link_mapping_file, ip_port_info_file, vn_topology_file,
@@ -265,9 +299,11 @@ def main():
                     otn = update_otn_capacity(otn, ip, otn_util_matrix,
                             args.vnr_directory + "/" + e.vn_id + ".new_ip")
                     write_csv_graph(ip, args.ip_topology_file)
+                    write_ip_port_info(ip, num_ports, port_capacities, ip_port_info_file)
                     write_csv_graph(otn, args.otn_topology_file)
                     write_ip_util_matrix(ip, ip_util_matrix, "sim-data/util-data/ip_util." + str(e.ts))
                     write_otn_util_matrix(otn, otn_util_matrix,"sim-data/util-data/otn_util." + str(e.ts))
+                    write_new_ip_info(args.vnr_directory + "/" + e.vn_id + ".new_ip", "sim-data/util-data/new_ip." + str(e.ts))    
                     accepted_vns += 1
                     active_vns.append(e.vn_id)
                     break
