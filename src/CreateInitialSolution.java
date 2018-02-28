@@ -556,14 +556,28 @@ public class CreateInitialSolution {
                     .getBw();
             int curb = prevb - bw;
             // Update BW Capacity for the first edge
+            System.out.println("bw = " + bw
+                    + ", current = " + curb + ", prev = " + prevb + " ("
+                    + src + ","
+                    + collapsedGraph.getAdjList().get(src).get(dstIndex)
+                            .getNodeId()
+                    + "," + collapsedGraph.getAdjList().get(src)
+                            .get(dstIndex).getOrder()
+                    + "--" + path.get(k));
             collapsedGraph.getAdjList().get(src).get(dstIndex).setBw(
                     collapsedGraph.getAdjList().get(src).get(dstIndex).getBw()
                             - bw);
             if (curb < 0) {
                 System.out.println("Violating capacity constraint...bw = " + bw
-                        + ", current = " + curb + ", prev = " + prevb + " "
-                        + path.get(k));
+                        + ", current = " + curb + ", prev = " + prevb + " ("
+                        + src + ","
+                        + collapsedGraph.getAdjList().get(src).get(dstIndex)
+                                .getNodeId()
+                        + "," + collapsedGraph.getAdjList().get(src)
+                                .get(dstIndex).getOrder()
+                        + "--" + path.get(k));
             }
+            
             // Update BW Capacity for the second edge
             collapsedGraph.getAdjList().get(dst).get(srcIndex).setBw(
                     collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw()
@@ -571,10 +585,23 @@ public class CreateInitialSolution {
 
             prevb = collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw();
             curb = prevb - bw;
+            System.out.println("bw = " + bw
+                    + ", current = " + curb + ", prev = " + prevb + " ("
+                    + src + ","
+                    + collapsedGraph.getAdjList().get(dst).get(srcIndex)
+                            .getNodeId()
+                    + "," + collapsedGraph.getAdjList().get(dst)
+                            .get(srcIndex).getOrder()
+                    + "--" + path.get(k));
             if (curb < 0) {
                 System.out.println("Violating capacity constraint...bw = " + bw
-                        + ", current = " + curb + ", prev = " + prevb + " "
-                        + path.get(k));
+                        + ", current = " + curb + ", prev = " + prevb + " ("
+                        + src + ","
+                        + collapsedGraph.getAdjList().get(dst).get(srcIndex)
+                                .getNodeId()
+                        + "," + collapsedGraph.getAdjList().get(dst)
+                                .get(srcIndex).getOrder()
+                        + "--" + path.get(k));
             }
         }
         System.out.println("");
