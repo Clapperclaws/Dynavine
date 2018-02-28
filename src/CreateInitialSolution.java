@@ -462,14 +462,14 @@ public class CreateInitialSolution {
 
                     // Check if this link has already been created
                     int index = sol.isIPLinkCreated(srcIP, dstIP);
-                    if (index != -1) {
+                    //if (index != -1) {
                         // Check if the link has enough capacity
-                        if (collapsedGraph.getBW(srcIP, dstIP, sol
-                                .getNewIpLinks().get(index).getOrder()) >= bw)
+                    //    if (collapsedGraph.getBW(srcIP, dstIP, sol
+                    //            .getNewIpLinks().get(index).getOrder()) >= bw)
                             // Add the IP Link in the VN->IP Overlay Solution
-                            sol.vnIp.linkMapping.get((Tuple) pair.getKey())
-                                    .add(sol.getNewIpLinks().get(index));
-                    } else {
+                    //        sol.vnIp.linkMapping.get((Tuple) pair.getKey())
+                    //                .add(sol.getNewIpLinks().get(index));
+                    //} else {
                         // Find the order of the new IP Link
                         int tupleOrder = collapsedGraph.findTupleOrder(srcIP,
                                 dstIP);
@@ -510,7 +510,7 @@ public class CreateInitialSolution {
                         // Update OTN Links Capacity
                         updateResidualCapacity(ipTup, newIpLinkPath,
                                 newIPLinkCap);
-                    }
+                   // }
                 }
             }
             updateResidualCapacity(vLink, sol.vnIp.linkMapping.get(vLink), bw);
