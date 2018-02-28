@@ -1,12 +1,10 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
@@ -113,6 +111,7 @@ public class Driver {
         bw.close();
         fw.close();
 
+        /*
         HashMap<Tuple, Integer> linkUsage = new HashMap<Tuple, Integer>();
         HashMap<Tuple, ArrayList<Tuple>> revMap = new HashMap<Tuple, ArrayList<Tuple>>();
         for (Tuple vlink : solution.getVnIp().linkMapping.keySet()) {
@@ -148,7 +147,7 @@ public class Driver {
             int u = linkUsage.get(ipLink);
             System.out.println(ipLink + ": used = " + u + ", cap = " + b);
             System.out.println(ipLink + "--> " + revMap.get(ipLink));
-        }
+        }*/
     }
 
     private static void WriteSolutionCostToFile(Solutions solution, Graph vn,
@@ -164,9 +163,7 @@ public class Driver {
                 int linkCost = ip.getCost(link.getSource(),
                         link.getDestination(), link.getOrder());
                 if (linkCost == -1)
-                    linkCost = 1;
-                // System.out.println("VL bw = " + bw + "; IP Link Cost = "
-                // + linkCost + "\n");
+                    linkCost = 1;                
                 cost += (bw * linkCost);
             }
         }

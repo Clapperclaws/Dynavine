@@ -1,7 +1,3 @@
-import java.awt.event.AdjustmentListener;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -56,10 +52,10 @@ public class CreateInitialSolution {
         Solutions bestSolution = null;
         long bestCost = Integer.MAX_VALUE;
         do {
-            System.out.println("Iteration = " + iter);
+            // System.out.println("Iteration = " + iter);
             // 1- Get a new list order
             ArrayList<Integer> listOrder = getListOrder(vn);
-            
+
             // Create a copy of the collapsed graph - Reset the graph
             collapsedGraph = new Graph(rootCollapsedGraph);
 
@@ -68,35 +64,21 @@ public class CreateInitialSolution {
             Solutions sol = execute(vn, locationConstraints, listOrder);
             if (sol.getStatus() == "Success") {
                 long cost = GetSolutionCost(sol, vn);
-                // System.out.println("Iter = " + Integer.toString(iter)
-                // + ": Current cost = " + Long.toString(cost) + "\n");
+                // 3- Find the solution with the lowest cost
                 if (cost < bestCost) {
                     bestCost = cost;
                     bestSolution = sol;
                 }
-                System.out.println("Current best solution:");
-                System.out.println(bestSolution);
-                // System.out.println("Iter = " + Integer.toString(iter)
-                // + ": Current best cost = " + Long.toString(bestCost)
-                // + "\n");
+                // System.out.println("Current best solution:");
+                // System.out.println(bestSolution);
             } else if (sol.getStatus() == "Invalid Input") {
                 return sol;
             }
-            // else {
-            // System.out.println("Iter = " + Integer.toString(iter)
-            // + ": no success!!\n");
-            // }
             resetCollapsedGraph(sol);
             ++iter;
         } while (iter < k);
 
-        // 3- Find the solution with the lowest cost
-        // return execute(vn, locationConstraints, listOrder);
         // 4- Return lowest cost solution
-        // return sol;
-        System.out.println(
-                "Best solution cost = " + Long.toString(bestCost) + "\n");
-        System.out.println(bestSolution);
         return bestSolution;
     }
 
@@ -136,7 +118,6 @@ public class CreateInitialSolution {
 
         // This counter will be used to set the ID of newly create metanodes
         int counter = otnNodesSize + ipNodesSize;
-        // System.out.println(order);
         // 1- For each node in N
         for (int i = 0; i < order.size(); i++) {
             // Restart Counter.
@@ -242,10 +223,8 @@ public class CreateInitialSolution {
                 sol.setStatus("Invalid Input");
                 return sol;
             }
-            System.out.println("maxLinkCap = " + maxLinkCap);
             // 4- Connect all Meta Nodes to a single Sink Node
             int sink = counter;
-            // System.out.println("Sink Node " + sink);
             collapsedGraph.addEndPointList(counter, new ArrayList<EndPoint>());
             for (int j = 0; j < metaNodes.size(); j++) {
                 EndPoint sinkMetaNode = new EndPoint(counter, 1, 1,
@@ -282,8 +261,6 @@ public class CreateInitialSolution {
                     counter++;
                 }
             }
-            // System.out.println(
-            // "Collapsed Graph with Meta Nodes \n" + collapsedGraph);
 
             // 4- Call EK
             ArrayList<ArrayList<Tuple>> embeddingPaths = MaxFlow(collapsedGraph,
@@ -360,7 +337,6 @@ public class CreateInitialSolution {
             aggregateSolution(vn, embdSol, sol);
             cleanAllMetaNodeLink();
         }
-        // System.out.println("Solution :" + sol);
         for (int i = 0; i < vn.getNodeCount(); ++i) {
             if (!sol.vnIp.isNodeSettled(i, vn.getAdjList().get(i).size())) {
                 cleanAllMetaNodeLink();
@@ -462,55 +438,53 @@ public class CreateInitialSolution {
 
                     // Check if this link has already been created
                     int index = sol.isIPLinkCreated(srcIP, dstIP);
-                    //if (index != -1) {
-                        // Check if the link has enough capacity
-                    //    if (collapsedGraph.getBW(srcIP, dstIP, sol
-                    //            .getNewIpLinks().get(index).getOrder()) >= bw)
-                            // Add the IP Link in the VN->IP Overlay Solution
-                    //        sol.vnIp.linkMapping.get((Tuple) pair.getKey())
-                    //                .add(sol.getNewIpLinks().get(index));
-                    //} else {
-                        // Find the order of the new IP Link
-                        int tupleOrder = collapsedGraph.findTupleOrder(srcIP,
-                                dstIP);
+                    // if (index != -1) {
+                    // Check if the link has enough capacity
+                    // if (collapsedGraph.getBW(srcIP, dstIP, sol
+                    // .getNewIpLinks().get(index).getOrder()) >= bw)
+                    // Add the IP Link in the VN->IP Overlay Solution
+                    // sol.vnIp.linkMapping.get((Tuple) pair.getKey())
+                    // .add(sol.getNewIpLinks().get(index));
+                    // } else {
+                    // Find the order of the new IP Link
+                    int tupleOrder = collapsedGraph.findTupleOrder(srcIP,
+                            dstIP);
 
-                        // Create new Tuple for the IP Link
-                        Tuple ipTup = new Tuple(tupleOrder, srcIP, dstIP);
+                    // Create new Tuple for the IP Link
+                    Tuple ipTup = new Tuple(tupleOrder, srcIP, dstIP);
 
-                        // Add the path in the IP->OTN Overlay Solution
-                        sol.ipOtn.linkMapping.put(ipTup, newIpLinkPath);
+                    // Add the path in the IP->OTN Overlay Solution
+                    sol.ipOtn.linkMapping.put(ipTup, newIpLinkPath);
 
-                        // Add the IP Link in the VN->IP Overlay Solution
-                        sol.vnIp.linkMapping.get((Tuple) pair.getKey())
-                                .add(ipTup);
+                    // Add the IP Link in the VN->IP Overlay Solution
+                    sol.vnIp.linkMapping.get((Tuple) pair.getKey()).add(ipTup);
 
-                        // Get Bandwidth Capacity of new IP Link. Remember to
-                        // offset the bandwidth of current vlink.
-                        int newIPLinkCap = Math.min(
-                                collapsedGraph.getPortCapacity()[srcIP],
-                                collapsedGraph.getPortCapacity()[dstIP]);
+                    // Get Bandwidth Capacity of new IP Link. Remember to
+                    // offset the bandwidth of current vlink.
+                    int newIPLinkCap = Math.min(
+                            collapsedGraph.getPortCapacity()[srcIP],
+                            collapsedGraph.getPortCapacity()[dstIP]);
 
-                        // Add ipSrc as neighbor of ipDst
-                        collapsedGraph.addEndPoint(srcIP, new EndPoint(dstIP, 1,
-                                newIPLinkCap, EndPoint.type.ip, tupleOrder));
+                    // Add ipSrc as neighbor of ipDst
+                    collapsedGraph.addEndPoint(srcIP, new EndPoint(dstIP, 1,
+                            newIPLinkCap, EndPoint.type.ip, tupleOrder));
 
-                        // Add ipDst as neighbor of ipSrc
-                        collapsedGraph.addEndPoint(dstIP, new EndPoint(srcIP, 1,
-                                newIPLinkCap, EndPoint.type.ip, tupleOrder));
+                    // Add ipDst as neighbor of ipSrc
+                    collapsedGraph.addEndPoint(dstIP, new EndPoint(srcIP, 1,
+                            newIPLinkCap, EndPoint.type.ip, tupleOrder));
 
-                        // Add IP Link to the list of new IP Links
-                        sol.newIpLinks.add(ipTup);
+                    // Add IP Link to the list of new IP Links
+                    sol.newIpLinks.add(ipTup);
 
-                        // Update IP Ports
-                        collapsedGraph.setPort(srcIP,
-                                collapsedGraph.getPorts()[srcIP] - 1);
-                        collapsedGraph.setPort(dstIP,
-                                collapsedGraph.getPorts()[dstIP] - 1);
+                    // Update IP Ports
+                    collapsedGraph.setPort(srcIP,
+                            collapsedGraph.getPorts()[srcIP] - 1);
+                    collapsedGraph.setPort(dstIP,
+                            collapsedGraph.getPorts()[dstIP] - 1);
 
-                        // Update OTN Links Capacity
-                        updateResidualCapacity(ipTup, newIpLinkPath,
-                                newIPLinkCap);
-                   // }
+                    // Update OTN Links Capacity
+                    updateResidualCapacity(ipTup, newIpLinkPath, newIPLinkCap);
+                    // }
                 }
             }
             updateResidualCapacity(vLink, sol.vnIp.linkMapping.get(vLink), bw);
@@ -544,8 +518,8 @@ public class CreateInitialSolution {
     }
 
     public void updateResidualCapacity(Tuple t, ArrayList<Tuple> path, int bw) {
-        System.out.println("Updating with tuple: " + t);
-        System.out.println("Updating path: " + path);
+        // System.out.println("Updating with tuple: " + t);
+        // System.out.println("Updating path: " + path);
         // Update Network Capacity
         for (int k = 0; k < path.size(); k++) {
             // Get the first edge of the link
@@ -559,92 +533,88 @@ public class CreateInitialSolution {
             int srcIndex = collapsedGraph.getNodeIndex(dst, src,
                     path.get(k).getOrder());
 
-            System.out.println("src = " + src + ", dst = " + dst
-                    + ", srcIndex = " + srcIndex + ", dstIndex = " + dstIndex);
+            // System.out.println("src = " + src + ", dst = " + dst
+            // + ", srcIndex = " + srcIndex + ", dstIndex = " + dstIndex);
 
-            int curb = collapsedGraph.getAdjList().get(src).get(dstIndex)
-                    .getBw();
+            // int curb = collapsedGraph.getAdjList().get(src).get(dstIndex)
+            // .getBw();
             // Update BW Capacity for the first edge
-            System.out.println(
-                    "FW: bw = " + bw + ", prev = " + curb + " (" + src + ","
-                            + collapsedGraph.getAdjList().get(src).get(dstIndex)
-                                    .getNodeId()
-                            + "," + collapsedGraph.getAdjList().get(src)
-                                    .get(dstIndex).getOrder()
-                            + ")--" + path.get(k));
-            curb = collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw();
-            System.out.println(
-                    "BK: bw = " + bw + ", prev = " + curb + " (" + dst + ","
-                            + collapsedGraph.getAdjList().get(dst).get(srcIndex)
-                                    .getNodeId()
-                            + "," + collapsedGraph.getAdjList().get(dst)
-                                    .get(srcIndex).getOrder()
-                            + ")--" + path.get(k));
+            // System.out.println(
+            // "FW: bw = " + bw + ", prev = " + curb + " (" + src + ","
+            // + collapsedGraph.getAdjList().get(src).get(dstIndex)
+            // .getNodeId()
+            // + "," + collapsedGraph.getAdjList().get(src)
+            // .get(dstIndex).getOrder()
+            // + ")--" + path.get(k));
+            // curb =
+            // collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw();
+            // System.out.println(
+            // "BK: bw = " + bw + ", prev = " + curb + " (" + dst + ","
+            // + collapsedGraph.getAdjList().get(dst).get(srcIndex)
+            // .getNodeId()
+            // + "," + collapsedGraph.getAdjList().get(dst)
+            // .get(srcIndex).getOrder()
+            // + ")--" + path.get(k));
 
             collapsedGraph.getAdjList().get(src).get(dstIndex).setBw(
                     collapsedGraph.getAdjList().get(src).get(dstIndex).getBw()
                             - bw);
 
-            curb = collapsedGraph.getAdjList().get(src).get(dstIndex).getBw();
+            // curb =
+            // collapsedGraph.getAdjList().get(src).get(dstIndex).getBw();
             // Update BW Capacity for the first edge
-            System.out
-                    .println(
-                            "FW: bw = " + bw + ", current = " + curb + " ("
-                                    + src + "," + collapsedGraph.getAdjList()
-                                            .get(src).get(dstIndex).getNodeId()
-                                    + ","
-                                    + collapsedGraph.getAdjList().get(src)
-                                            .get(dstIndex).getOrder()
-                                    + ")--" + path.get(k));
-            curb = collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw();
-            System.out
-                    .println(
-                            "BK: bw = " + bw + ", current = " + curb + " ("
-                                    + dst + "," + collapsedGraph.getAdjList()
-                                            .get(dst).get(srcIndex).getNodeId()
-                                    + ","
-                                    + collapsedGraph.getAdjList().get(dst)
-                                            .get(srcIndex).getOrder()
-                                    + ")--" + path.get(k));
+            // System.out
+            // .println(
+            // "FW: bw = " + bw + ", current = " + curb + " ("
+            // + src + "," + collapsedGraph.getAdjList()
+            // .get(src).get(dstIndex).getNodeId()
+            // + ","
+            // + collapsedGraph.getAdjList().get(src)
+            // .get(dstIndex).getOrder()
+            // + ")--" + path.get(k));
+            // curb =
+            // collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw();
+            // System.out
+            // .println(
+            // "BK: bw = " + bw + ", current = " + curb + " ("
+            // + dst + "," + collapsedGraph.getAdjList()
+            // .get(dst).get(srcIndex).getNodeId()
+            // + ","
+            // + collapsedGraph.getAdjList().get(dst)
+            // .get(srcIndex).getOrder()
+            // + ")--" + path.get(k));
+            // curb =
+            // collapsedGraph.getAdjList().get(src).get(dstIndex).getBw();
 
-            curb = collapsedGraph.getAdjList().get(src).get(dstIndex).getBw();
-
-            if (curb < 0) {
-                System.out.println("FW: Violating capacity constraint...bw = "
-                        + bw + ", current = " + curb + ", prev = "
-                        + Integer.toString(curb + bw) + " (" + src + ","
-                        + collapsedGraph.getAdjList().get(src).get(dstIndex)
-                                .getNodeId()
-                        + "," + collapsedGraph.getAdjList().get(src)
-                                .get(dstIndex).getOrder()
-                        + ")--" + path.get(k));
-            }
-
+            /*
+             * if (curb < 0) {
+             * System.out.println("FW: Violating capacity constraint...bw = " +
+             * bw + ", current = " + curb + ", prev = " + Integer.toString(curb
+             * + bw) + " (" + src + "," +
+             * collapsedGraph.getAdjList().get(src).get(dstIndex) .getNodeId() +
+             * "," + collapsedGraph.getAdjList().get(src)
+             * .get(dstIndex).getOrder() + ")--" + path.get(k)); }
+             */
             // Update BW Capacity for the second edge
             collapsedGraph.getAdjList().get(dst).get(srcIndex).setBw(
                     collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw()
                             - bw);
-
-            curb = collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw();
-            System.out.println(
-                    "BK: bw = " + bw + ", prev = " + curb + " (" + dst + ","
-                            + collapsedGraph.getAdjList().get(dst).get(srcIndex)
-                                    .getNodeId()
-                            + "," + collapsedGraph.getAdjList().get(dst)
-                                    .get(srcIndex).getOrder()
-                            + ")--" + path.get(k));
-            if (curb < 0) {
-                System.out.println("BK: Violating capacity constraint...bw = "
-                        + bw + ", current = " + curb + ", prev = "
-                        + Integer.toString(curb + bw) + " (" + dst + ","
-                        + collapsedGraph.getAdjList().get(dst).get(srcIndex)
-                                .getNodeId()
-                        + "," + collapsedGraph.getAdjList().get(dst)
-                                .get(srcIndex).getOrder()
-                        + ")--" + path.get(k));
-            }
+            /*
+             * curb =
+             * collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw();
+             * System.out.println( "BK: bw = " + bw + ", prev = " + curb + " ("
+             * + dst + "," + collapsedGraph.getAdjList().get(dst).get(srcIndex)
+             * .getNodeId() + "," + collapsedGraph.getAdjList().get(dst)
+             * .get(srcIndex).getOrder() + ")--" + path.get(k)); if (curb < 0) {
+             * System.out.println("BK: Violating capacity constraint...bw = " +
+             * bw + ", current = " + curb + ", prev = " + Integer.toString(curb
+             * + bw) + " (" + dst + "," +
+             * collapsedGraph.getAdjList().get(dst).get(srcIndex) .getNodeId() +
+             * "," + collapsedGraph.getAdjList().get(dst)
+             * .get(srcIndex).getOrder() + ")--" + path.get(k)); }
+             */
         }
-        System.out.println("");
+        // System.out.println("");
     }
 
     // Returns a shuffled order of VN nodes
@@ -710,13 +680,6 @@ public class CreateInitialSolution {
                 } else {
                     capacity[i][endPoint.getNodeId()][endPoint
                             .getOrder()] = endPoint.getBw() / maxLinkCap;
-                    // System.out.println(
-                    // endPoint + "----maxLinkCap = " + maxLinkCap);
-                    // System.out.println(
-                    // "capacity[" + i + "][" + endPoint.getNodeId() + "]["
-                    // + endPoint.getOrder() + "] = "
-                    // + capacity[i][endPoint.getNodeId()][endPoint
-                    // .getOrder()]);
                 }
             }
         }
@@ -785,24 +748,20 @@ public class CreateInitialSolution {
         // If maximum flow is less than the number of links to be embedded this
         // means that embedding has failed.
         if (maxFlow < N - 1) {
-            // System.out.println("Cannot find sufficient paths between " +
-            // source
-            // + " and " + sink + "; Maxflow = " + maxFlow
-            // + ", required flow = " + (N));
             return null;
         }
-        for (Tuple t : linkToPathMap.keySet()) {
-            System.out.println("Link " + t + " is part of "
-                    + linkToPathMap.get(t).size() + " paths");
-            int req = linkToPathMap.get(t).size() * maxLinkCap;
-            int has = collapsedGraph.getBW(t.getSource(), t.getDestination(),
-                    t.getOrder());
-            System.out.println(
-                    "Link " + t + " needs >= " + req + ", has = " + has);
-            System.out.println(
-                    capacity[t.getSource()][t.getDestination()][t.getOrder()]);
-        }
-        System.out.println("Augpaths: " + augPaths);
+        // for (Tuple t : linkToPathMap.keySet()) {
+        // System.out.println("Link " + t + " is part of "
+        // + linkToPathMap.get(t).size() + " paths");
+        // int req = linkToPathMap.get(t).size() * maxLinkCap;
+        // int has = collapsedGraph.getBW(t.getSource(), t.getDestination(),
+        // t.getOrder());
+        // System.out.println(
+        // "Link " + t + " needs >= " + req + ", has = " + has);
+        // System.out.println(
+        // capacity[t.getSource()][t.getDestination()][t.getOrder()]);
+        // }
+        // System.out.println("Augpaths: " + augPaths);
         // Construct flow paths from augmenting paths. The algorithm is as
         // follows: If augmenting path a and b contains links (u, v) and (v, u),
         // respectively, then it means flow along (u, v) is cancelled by b by
@@ -818,17 +777,21 @@ public class CreateInitialSolution {
                 Tuple link = augPaths.get(i).get(k);
                 Tuple reverseLink = new Tuple(link.getOrder(),
                         link.getDestination(), link.getSource());
-                System.out.println("link = " + link + ", rev link = " + reverseLink);
+                // System.out.println("link = " + link + ", rev link = " +
+                // reverseLink);
                 ArrayList<int[]> pairs = null;
                 for (Tuple tt : linkToPathMap.keySet()) {
-                  if ((tt.getSource() == reverseLink.getSource()) && (tt.getDestination() == reverseLink.getDestination()) && (tt.getOrder() == reverseLink.getOrder())) {
-                    pairs = linkToPathMap.get(tt);
-                    break;
-                  }
+                    if ((tt.getSource() == reverseLink.getSource())
+                            && (tt.getDestination() == reverseLink
+                                    .getDestination())
+                            && (tt.getOrder() == reverseLink.getOrder())) {
+                        pairs = linkToPathMap.get(tt);
+                        break;
+                    }
                 }
                 // ArrayList<int[]> pairs = linkToPathMap.get(reverseLink);
                 if (pairs != null) {
-                    System.out.println("Rev link found");
+                    // System.out.println("Rev link found");
                     // A link on the tentative flow path is cancelled by a
                     // reverse link on another path. Now we splice up the paths
                     // and create a new one.
@@ -837,7 +800,6 @@ public class CreateInitialSolution {
                         pairs.remove(0);
                         int otherPathIndex = pair[0];
                         int reverseLinkIndex = pair[1];
-                        System.out.println("Splicing " + tentativeFlowPath + " and " + augPaths.get(otherPathIndex) + " at " + k);
                         tentativeFlowPath = (ArrayList<Tuple>) tentativeFlowPath
                                 .subList(0, k - 1);
                         tentativeFlowPath.addAll(augPaths.get(otherPathIndex)
@@ -845,14 +807,13 @@ public class CreateInitialSolution {
                                         augPaths.get(otherPathIndex).size()));
                     }
 
-                } else {
-                    System.out.println("Rev link not found.");
+                } else {                    
                     ++k;
                 }
             }
             flowPaths.add(tentativeFlowPath);
         }
-        System.out.println(flowPaths);
+        // System.out.println(flowPaths);
         return flowPaths;
     }
 }
