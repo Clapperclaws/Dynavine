@@ -56,9 +56,10 @@ public class CreateInitialSolution {
         Solutions bestSolution = null;
         long bestCost = Integer.MAX_VALUE;
         do {
+            System.out.println("Iteration = " + iter);
             // 1- Get a new list order
             ArrayList<Integer> listOrder = getListOrder(vn);
-
+            
             // Create a copy of the collapsed graph - Reset the graph
             collapsedGraph = new Graph(rootCollapsedGraph);
 
@@ -73,6 +74,8 @@ public class CreateInitialSolution {
                     bestCost = cost;
                     bestSolution = sol;
                 }
+                System.out.println("Current best solution:");
+                System.out.println(bestSolution);
                 // System.out.println("Iter = " + Integer.toString(iter)
                 // + ": Current best cost = " + Long.toString(bestCost)
                 // + "\n");
@@ -93,7 +96,7 @@ public class CreateInitialSolution {
         // return sol;
         System.out.println(
                 "Best solution cost = " + Long.toString(bestCost) + "\n");
-        // System.out.println(bestSolution);
+        System.out.println(bestSolution);
         return bestSolution;
     }
 
@@ -541,6 +544,7 @@ public class CreateInitialSolution {
     }
 
     public void updateResidualCapacity(Tuple t, ArrayList<Tuple> path, int bw) {
+        System.out.println("Updating with tuple: " + t);
         System.out.println("Updating path: " + path);
         // Update Network Capacity
         for (int k = 0; k < path.size(); k++) {
