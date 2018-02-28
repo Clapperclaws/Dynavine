@@ -567,7 +567,7 @@ public class CreateInitialSolution {
                     + ")--" + path.get(k));
             collapsedGraph.getAdjList().get(src).get(dstIndex).setBw(
                     collapsedGraph.getAdjList().get(src).get(dstIndex).getBw()
-                            - bw);
+                            - bw);            
             if (curb < 0) {
                 System.out.println("FW: Violating capacity constraint...bw = "
                         + bw + ", current = " + curb + ", prev = " + prevb
@@ -587,7 +587,7 @@ public class CreateInitialSolution {
             prevb = collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw();
             curb = prevb - bw;
             System.out.println("BK: bw = " + bw + ", current = " + curb
-                    + ", prev = " + prevb + " (" + src + ","
+                    + ", prev = " + prevb + " (" + dst + ","
                     + collapsedGraph.getAdjList().get(dst).get(srcIndex)
                             .getNodeId()
                     + "," + collapsedGraph.getAdjList().get(dst).get(srcIndex)
@@ -596,7 +596,7 @@ public class CreateInitialSolution {
             if (curb < 0) {
                 System.out.println("BK: Violating capacity constraint...bw = "
                         + bw + ", current = " + curb + ", prev = " + prevb
-                        + " (" + src + ","
+                        + " (" + dst + ","
                         + collapsedGraph.getAdjList().get(dst).get(srcIndex)
                                 .getNodeId()
                         + "," + collapsedGraph.getAdjList().get(dst)
