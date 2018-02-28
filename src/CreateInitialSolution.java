@@ -818,8 +818,10 @@ public class CreateInitialSolution {
                 Tuple link = augPaths.get(i).get(k);
                 Tuple reverseLink = new Tuple(link.getOrder(),
                         link.getDestination(), link.getSource());
+                System.out.println("link = " + link + ", rev link = " + reverseLink);
                 ArrayList<int[]> pairs = linkToPathMap.get(reverseLink);
                 if (pairs != null) {
+                    System.out.println("Rev link found");
                     // A link on the tentative flow path is cancelled by a
                     // reverse link on another path. Now we splice up the paths
                     // and create a new one.
@@ -836,8 +838,10 @@ public class CreateInitialSolution {
                                         augPaths.get(otherPathIndex).size()));
                     }
 
-                } else
+                } else {
+                    System.out.println("Rev link not found.");
                     ++k;
+                }
             }
             flowPaths.add(tentativeFlowPath);
         }
