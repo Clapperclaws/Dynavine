@@ -800,8 +800,8 @@ public class CreateInitialSolution {
                         pairs.remove(0);
                         int otherPathIndex = pair[0];
                         int reverseLinkIndex = pair[1];
-                        tentativeFlowPath = (ArrayList<Tuple>) tentativeFlowPath
-                                .subList(0, k - 1);
+                        tentativeFlowPath = new ArrayList<Tuple>(tentativeFlowPath
+                                .subList(0, k - 1));
                         tentativeFlowPath.addAll(augPaths.get(otherPathIndex)
                                 .subList(reverseLinkIndex + 1,
                                         augPaths.get(otherPathIndex).size()));
