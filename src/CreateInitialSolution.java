@@ -802,6 +802,7 @@ public class CreateInitialSolution {
             System.out.println(
                     capacity[t.getSource()][t.getDestination()][t.getOrder()]);
         }
+        System.out.println("Augpaths: " + augPaths);
         // Construct flow paths from augmenting paths. The algorithm is as
         // follows: If augmenting path a and b contains links (u, v) and (v, u),
         // respectively, then it means flow along (u, v) is cancelled by b by
@@ -827,6 +828,7 @@ public class CreateInitialSolution {
                         pairs.remove(0);
                         int otherPathIndex = pair[0];
                         int reverseLinkIndex = pair[1];
+                        System.out.println("Splicing " + tentativeFlowPath + " and " + augPaths.get(otherPathIndex) + " at " + k);
                         tentativeFlowPath = (ArrayList<Tuple>) tentativeFlowPath
                                 .subList(0, k - 1);
                         tentativeFlowPath.addAll(augPaths.get(otherPathIndex)
