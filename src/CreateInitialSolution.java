@@ -552,32 +552,33 @@ public class CreateInitialSolution {
             int srcIndex = collapsedGraph.getNodeIndex(dst, src,
                     path.get(k).getOrder());
 
+            System.out.println("src = " + src + ", dst = " + dst
+                    + ", srcIndex = " + srcIndex + ", dstIndex = " + dstIndex);
             int prevb = collapsedGraph.getAdjList().get(src).get(dstIndex)
                     .getBw();
             int curb = prevb - bw;
             // Update BW Capacity for the first edge
-            System.out.println("FW: bw = " + bw
-                    + ", current = " + curb + ", prev = " + prevb + " ("
-                    + src + ","
+            System.out.println("FW: bw = " + bw + ", current = " + curb
+                    + ", prev = " + prevb + " (" + src + ","
                     + collapsedGraph.getAdjList().get(src).get(dstIndex)
                             .getNodeId()
-                    + "," + collapsedGraph.getAdjList().get(src)
-                            .get(dstIndex).getOrder()
+                    + "," + collapsedGraph.getAdjList().get(src).get(dstIndex)
+                            .getOrder()
                     + ")--" + path.get(k));
             collapsedGraph.getAdjList().get(src).get(dstIndex).setBw(
                     collapsedGraph.getAdjList().get(src).get(dstIndex).getBw()
                             - bw);
             if (curb < 0) {
-                System.out.println("FW: Violating capacity constraint...bw = " + bw
-                        + ", current = " + curb + ", prev = " + prevb + " ("
-                        + src + ","
+                System.out.println("FW: Violating capacity constraint...bw = "
+                        + bw + ", current = " + curb + ", prev = " + prevb
+                        + " (" + src + ","
                         + collapsedGraph.getAdjList().get(src).get(dstIndex)
                                 .getNodeId()
                         + "," + collapsedGraph.getAdjList().get(src)
                                 .get(dstIndex).getOrder()
                         + ")--" + path.get(k));
             }
-            
+
             // Update BW Capacity for the second edge
             collapsedGraph.getAdjList().get(dst).get(srcIndex).setBw(
                     collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw()
@@ -585,18 +586,17 @@ public class CreateInitialSolution {
 
             prevb = collapsedGraph.getAdjList().get(dst).get(srcIndex).getBw();
             curb = prevb - bw;
-            System.out.println("BK: bw = " + bw
-                    + ", current = " + curb + ", prev = " + prevb + " ("
-                    + src + ","
+            System.out.println("BK: bw = " + bw + ", current = " + curb
+                    + ", prev = " + prevb + " (" + src + ","
                     + collapsedGraph.getAdjList().get(dst).get(srcIndex)
                             .getNodeId()
-                    + "," + collapsedGraph.getAdjList().get(dst)
-                            .get(srcIndex).getOrder()
+                    + "," + collapsedGraph.getAdjList().get(dst).get(srcIndex)
+                            .getOrder()
                     + ")--" + path.get(k));
             if (curb < 0) {
-                System.out.println("BK: Violating capacity constraint...bw = " + bw
-                        + ", current = " + curb + ", prev = " + prevb + " ("
-                        + src + ","
+                System.out.println("BK: Violating capacity constraint...bw = "
+                        + bw + ", current = " + curb + ", prev = " + prevb
+                        + " (" + src + ","
                         + collapsedGraph.getAdjList().get(dst).get(srcIndex)
                                 .getNodeId()
                         + "," + collapsedGraph.getAdjList().get(dst)
