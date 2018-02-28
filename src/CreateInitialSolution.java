@@ -350,6 +350,8 @@ public class CreateInitialSolution {
                         }
                     }
                     embdSol.setLinkMappingPath(vLink, embeddingPaths.get(k));
+                    System.out
+                            .println("Cleaned path: " + embeddingPaths.get(k));
                 }
             }
             aggregateSolution(vn, embdSol, sol);
