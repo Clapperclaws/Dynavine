@@ -541,6 +541,7 @@ public class CreateInitialSolution {
     }
 
     public void updateResidualCapacity(Tuple t, ArrayList<Tuple> path, int bw) {
+        System.out.println("Updating path: " + path);
         // Update Network Capacity
         for (int k = 0; k < path.size(); k++) {
             // Get the first edge of the link
