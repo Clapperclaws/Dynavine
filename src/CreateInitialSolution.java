@@ -774,6 +774,7 @@ public class CreateInitialSolution {
                     augPaths.get(i));
             int k = 0;
             while (k < tentativeFlowPath.size()) {
+                System.out.println("k = " + k);
                 Tuple link = augPaths.get(i).get(k);
                 Tuple reverseLink = new Tuple(link.getOrder(),
                         link.getDestination(), link.getSource());
