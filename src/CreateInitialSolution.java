@@ -819,7 +819,14 @@ public class CreateInitialSolution {
                 Tuple reverseLink = new Tuple(link.getOrder(),
                         link.getDestination(), link.getSource());
                 System.out.println("link = " + link + ", rev link = " + reverseLink);
-                ArrayList<int[]> pairs = linkToPathMap.get(reverseLink);
+                ArrayList<int[]> pairs = null;
+                for (Tuple tt : linkToPathMap.keySet()) {
+                  if ((tt.getSource() == reverseLink.getSource()) && (tt.getDestination() == reverseLink.getDestination()) && (tt.getOrder() == reverseLink.getOrder())) {
+                    pairs = linkToPathMap.get(tt);
+                    break;
+                  }
+                }
+                // ArrayList<int[]> pairs = linkToPathMap.get(reverseLink);
                 if (pairs != null) {
                     System.out.println("Rev link found");
                     // A link on the tentative flow path is cancelled by a
