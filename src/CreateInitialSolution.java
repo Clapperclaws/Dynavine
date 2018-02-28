@@ -777,8 +777,6 @@ public class CreateInitialSolution {
                 Tuple link = augPaths.get(i).get(k);
                 Tuple reverseLink = new Tuple(link.getOrder(),
                         link.getDestination(), link.getSource());
-                // System.out.println("link = " + link + ", rev link = " +
-                // reverseLink);
                 ArrayList<int[]> pairs = null;
                 for (Tuple tt : linkToPathMap.keySet()) {
                     if ((tt.getSource() == reverseLink.getSource())
