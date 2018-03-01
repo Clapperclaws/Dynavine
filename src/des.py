@@ -148,8 +148,6 @@ def update_ip_topology(ip, new_ip_map_file, ip_util_matrix, port_capacities, num
     return ip, port_capacities, num_ports
 
 def write_ip_port_info(ip, num_ports, port_caps, ip_port_info_file):
-    print num_ports
-    print port_caps
     with open(ip_port_info_file, "w") as f:
         for i in range(0, ip.number_of_nodes()):
             f.write(",".join([str(i), str(num_ports[i]), str(port_caps[i])]) + "\n")
