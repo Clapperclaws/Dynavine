@@ -740,8 +740,8 @@ public class CreateInitialSolution {
                 pair[1] = i;
                 if (linkToPathMap.get(link) == null) {
                     linkToPathMap.put(link, new ArrayList<int[]>());
-                }
-                linkToPathMap.get(link).add(pair);
+                    linkToPathMap.get(link).add(pair);
+                } else linkToPathMap.get(link).add(pair);
             }
         }
 
@@ -806,7 +806,7 @@ public class CreateInitialSolution {
                                 .subList(reverseLinkIndex + 1,
                                         augPaths.get(otherPathIndex).size()));
                         System.out.println(tentativeFlowPath);
-                    }
+                    } else ++k;
 
                 } else {                    
                     ++k;
