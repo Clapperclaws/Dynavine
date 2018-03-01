@@ -216,6 +216,7 @@ def main():
     parser.add_argument("--simulation_plan", type = str, 
                         default = "simulation-plan")
     parser.add_argument("--max_simulation_time", type = int, default = 1000)
+    parser.add_argument("--num_shuffles", type = int, default = 15)
     args = parser.parse_args()
     port_capacities = []
     num_ports = []
@@ -282,7 +283,7 @@ def main():
             vn_location_file = get_full_path(current_directory, 
                                                      args.vnr_directory + "/" +
                                                      e.vn_id + "loc")
-            num_shuffles = 10
+            num_shuffles = args.num_shuffles
             for i in range(0, 1):
                 execute_one_experiment(args.executable, otn_topology_file,
                         ip_topology_file, ip_node_mapping_file,
