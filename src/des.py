@@ -282,7 +282,7 @@ def main():
             vn_location_file = get_full_path(current_directory, 
                                                      args.vnr_directory + "/" +
                                                      e.vn_id + "loc")
-            num_shuffles = 10
+            num_shuffles = 25
             for i in range(0, 1):
                 execute_one_experiment(args.executable, otn_topology_file,
                         ip_topology_file, ip_node_mapping_file,
