@@ -331,7 +331,7 @@ public class CreateInitialSolution {
                     }
                     embdSol.setLinkMappingPath(vLink, embeddingPaths.get(k));
                     // System.out
-                    //         .println("Cleaned path: " + embeddingPaths.get(k));
+                    // .println("Cleaned path: " + embeddingPaths.get(k));
                 }
             }
             aggregateSolution(vn, embdSol, sol);
@@ -639,8 +639,10 @@ public class CreateInitialSolution {
         for (int i = 0; i < collapsedGraph.getNodeCount(); ++i) {
             for (int j = 0; j < collapsedGraph.getNodeCount(); ++j) {
                 if (i >= 0 && i < ipNodesSize) {
-                    capacity[i][j] = new int[collapsedGraph.getPorts()[i]];
-                    flow[i][j] = new int[collapsedGraph.getPorts()[i]];
+                    int numPorts = collapsedGraph.findTupleOrder(i, j)
+                            + collapsedGraph.getPorts()[i];
+                    capacity[i][j] = new int[numPorts];
+                    flow[i][j] = new int[numPorts];
                 } else if ((i >= ipNodesSize && i < ipNodesSize + otnNodesSize)
                         && (j >= 0 && j < ipNodesSize)) {
                     capacity[i][j] = new int[collapsedGraph.getPorts()[j]];
@@ -750,7 +752,8 @@ public class CreateInitialSolution {
                 if (val == null) {
                     linkToPathMap.put(link, new ArrayList<int[]>());
                     linkToPathMap.get(link).add(pair);
-                } else val.add(pair);
+                } else
+                    val.add(pair);
             }
         }
 
@@ -809,15 +812,16 @@ public class CreateInitialSolution {
                         pairs.remove(0);
                         int otherPathIndex = pair[0];
                         int reverseLinkIndex = pair[1];
-                        tentativeFlowPath = new ArrayList<Tuple>(tentativeFlowPath
-                                .subList(0, k - 1));
+                        tentativeFlowPath = new ArrayList<Tuple>(
+                                tentativeFlowPath.subList(0, k - 1));
                         tentativeFlowPath.addAll(augPaths.get(otherPathIndex)
                                 .subList(reverseLinkIndex + 1,
                                         augPaths.get(otherPathIndex).size()));
                         // System.out.println(tentativeFlowPath);
-                    } else ++k;
+                    } else
+                        ++k;
 
-                } else {                    
+                } else {
                     ++k;
                 }
             }
