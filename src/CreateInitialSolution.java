@@ -334,8 +334,9 @@ public class CreateInitialSolution {
                     // .println("Cleaned path: " + embeddingPaths.get(k));
                 }
             }
-            aggregateSolution(vn, embdSol, sol);
+            boolean ret = aggregateSolution(vn, embdSol, sol);
             cleanAllMetaNodeLink();
+            if (!ret) return sol;
         }
         for (int i = 0; i < vn.getNodeCount(); ++i) {
             if (!sol.vnIp.isNodeSettled(i, vn.getAdjList().get(i).size())) {
@@ -366,7 +367,7 @@ public class CreateInitialSolution {
 
     // This function iteratively aggregates the final Solution after every
     // iteration.
-    public void aggregateSolution(Graph vn, OverlayMapping embdSol,
+    public boolean aggregateSolution(Graph vn, OverlayMapping embdSol,
             Solutions sol) {
         // 1- Aggregate Node Mapping Solution to Final Solution
         sol.vnIp.incrementNodeEmbed(embdSol);
@@ -487,11 +488,14 @@ public class CreateInitialSolution {
                     // }
                 }
             }
-            updateResidualCapacity(vLink, sol.vnIp.linkMapping.get(vLink), bw);
+            boolean ret = updateResidualCapacity(vLink,
+                    sol.vnIp.linkMapping.get(vLink), bw);
+            if (!ret) return false;
         }
+        return true;
     }
 
-    void resetCollapsedGraph(Solutions sol) {
+    boolean resetCollapsedGraph(Solutions sol) {
         ArrayList<Tuple> newIps = sol.getNewIpLinks();
         for (int i = 0; i < newIps.size(); ++i) {
             Tuple link = newIps.get(i);
@@ -513,11 +517,15 @@ public class CreateInitialSolution {
 
             // Restore bandwidth on the mapped OTN path.
             ArrayList<Tuple> otnPath = sol.ipOtn.getLinkMapping(link);
-            updateResidualCapacity(link, otnPath, -bw);
+            boolean retVal = updateResidualCapacity(link, otnPath, -bw);
+            if (!retVal)
+                return false;
         }
+        return true;
     }
 
-    public void updateResidualCapacity(Tuple t, ArrayList<Tuple> path, int bw) {
+    public boolean updateResidualCapacity(Tuple t, ArrayList<Tuple> path,
+            int bw) {
         // System.out.println("Updating with tuple: " + t);
         // System.out.println("Updating path: " + path);
         // Update Network Capacity
@@ -555,7 +563,10 @@ public class CreateInitialSolution {
             // + "," + collapsedGraph.getAdjList().get(dst)
             // .get(srcIndex).getOrder()
             // + ")--" + path.get(k));
-
+            if (bw > collapsedGraph.getAdjList().get(src).get(dstIndex)
+                    .getBw()) {
+                return false;
+            }
             collapsedGraph.getAdjList().get(src).get(dstIndex).setBw(
                     collapsedGraph.getAdjList().get(src).get(dstIndex).getBw()
                             - bw);
@@ -614,6 +625,7 @@ public class CreateInitialSolution {
              * .get(srcIndex).getOrder() + ")--" + path.get(k)); }
              */
         }
+        return true;
         // System.out.println("");
     }
 
