@@ -738,10 +738,19 @@ public class CreateInitialSolution {
                 int[] pair = new int[2];
                 pair[0] = augPaths.size() - 1;
                 pair[1] = i;
-                if (linkToPathMap.get(link) == null) {
+                ArrayList<int[]> val = null;
+                for (Tuple tt : linkToPathMap.keySet()) {
+                    if ((tt.getSource() == link.getSource())
+                            && (tt.getDestination() == link.getDestination())
+                            && (tt.getOrder() == link.getOrder())) {
+                        val = linkToPathMap.get(tt);
+                        break;
+                    }
+                }
+                if (val == null) {
                     linkToPathMap.put(link, new ArrayList<int[]>());
                     linkToPathMap.get(link).add(pair);
-                } else linkToPathMap.get(link).add(pair);
+                } else val.add(pair);
             }
         }
 
@@ -775,7 +784,7 @@ public class CreateInitialSolution {
             int k = 0;
             while (k < tentativeFlowPath.size()) {
                 System.out.println("k = " + k);
-                Tuple link = augPaths.get(i).get(k);
+                Tuple link = tentativeFlowPath.get(k);
                 Tuple reverseLink = new Tuple(link.getOrder(),
                         link.getDestination(), link.getSource());
                 ArrayList<int[]> pairs = null;
